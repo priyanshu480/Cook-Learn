@@ -1,510 +1,697 @@
 using System;
+ 
 using System.Collections.Generic;
+ 
 using System.Linq;
+ 
 using System.Threading.Tasks;
+ 
+using System.ComponentModel.DataAnnotations;
+ 
+using System.ComponentModel.DataAnnotations.Schema;
+ 
+using System.IdentityModel.Tokens.Jwt;
+ 
+using System.Security.Claims;
+ 
+using System.Text;
+ 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+ 
+using Microsoft.AspNetCore.Authorization;
+ 
+using Microsoft.AspNetCore.Mvc;
+ 
 using Microsoft.EntityFrameworkCore;
+ 
+using Microsoft.IdentityModel.Tokens;
+ 
 namespace dotnetapp.Models
+ 
 {
-public class ApplicationDbContext : DbContext
-{
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options): base(options)
+ 
+    public class ApplicationDbContext : DbContext
  
     {
+ 
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+ 
+    {
+ 
     }
+ 
     public DbSet<User> Users { get; set; }
  
-    public DbSet<Plant> Plants { get; set; }
+    public DbSet<Book> Books { get; set; }
+ 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+ 
+    {
+ 
+    base.OnModelCreating(modelBuilder);
+ 
+    modelBuilder.Entity<User>()
+ 
+    .HasIndex(x => x.Email)
+ 
+    .IsUnique();
+ 
+    modelBuilder.Entity<User>()
+ 
+    .Property(x => x.UserId)
+ 
+    .ValueGeneratedOnAdd();
+ 
+    modelBuilder.Entity<Book>()
+ 
+    .Property(x => x.BookId)
+ 
+    .ValueGeneratedOnAdd();
+ 
+    }
+ 
+    }
  
 }
-}
+ 
  
 using System;
+ 
 using System.Collections.Generic;
+ 
 using System.Linq;
+ 
 using System.Threading.Tasks;
+ 
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Identity;
+ 
+using System.ComponentModel.DataAnnotations.Schema;
+ 
+using System.IdentityModel.Tokens.Jwt;
+ 
+using System.Security.Claims;
+ 
+using System.Text;
+ 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+ 
+using Microsoft.AspNetCore.Authorization;
+ 
+using Microsoft.AspNetCore.Mvc;
+ 
+using Microsoft.EntityFrameworkCore;
+ 
+using Microsoft.IdentityModel.Tokens;
+ 
+namespace dotnetapp.Models
+ 
+{   public class Book
+ 
+    {
+ 
+    [Key]
+ 
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+ 
+    public int BookId { get; set; }
+ 
+    // Alias for payload/tests if they use Bookld instead of BookId
+ 
+    [NotMapped]
+ 
+    public int Bookld
+ 
+    {
+ 
+    get { return BookId; }
+ 
+    set { BookId = value; }
+ 
+    }
+ 
+    [Required]
+ 
+    public string Title { get; set; } = string.Empty;
+ 
+    [Required]
+ 
+    public string Author { get; set; } = string.Empty;
+ 
+    [Required]
+ 
+    public string Description { get; set; } = string.Empty;
+ 
+    [Required]
+ 
+    public double Price { get; set; }
+ 
+    }
+ 
+    }
+ 
+ 
+using System;
+ 
+using System.Collections.Generic;
+ 
+using System.Linq;
+ 
+using System.Threading.Tasks;
+ 
+using System.ComponentModel.DataAnnotations;
+ 
+using System.ComponentModel.DataAnnotations.Schema;
+ 
+using System.IdentityModel.Tokens.Jwt;
+ 
+using System.Security.Claims;
+ 
+using System.Text;
+ 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+ 
+using Microsoft.AspNetCore.Authorization;
+ 
+using Microsoft.AspNetCore.Mvc;
+ 
+using Microsoft.EntityFrameworkCore;
+ 
+using Microsoft.IdentityModel.Tokens;
  
 namespace dotnetapp.Models
 {
-    public class ApplicationUsers : IdentityUser
+    public class LoginModel
     {
-        [MaxLength(30)]
  
-        public string? Name {get; set;}
+        public string Email {get; set;}
  
- 
+        public string Password {get; set;}
        
     }
 }
  
 using System;
+ 
 using System.Collections.Generic;
+ 
 using System.Linq;
+ 
 using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations;
-namespace dotnetapp.Models
-{
-public class LoginModel
-{
-    [Required]
  
-    [EmailAddress]
-    public string Email { get; set; } = string.Empty;
-    [Required]
-    public string Password { get; set; } = string.Empty;
- 
-}
-}
- 
-   
- 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
  
-namespace dotnetapp.Models
-{
-public class Plant
-{
-    [Key]
-    public int PlantId { get; set; }
-    [Required]
+using System.ComponentModel.DataAnnotations.Schema;
  
-    public string Name { get; set; } = string.Empty;
-    [Required]
-     public string ScientificName { get; set; } = string.Empty;
+using System.IdentityModel.Tokens.Jwt;
  
-    [Required]
+using System.Security.Claims;
  
-    public string Description { get; set; } = string.Empty;
-    [Required]
+using System.Text;
  
-    public double Price { get; set; }
+using Microsoft.AspNetCore.Authentication.JwtBearer;
  
-}
-}
+using Microsoft.AspNetCore.Authorization;
  
+using Microsoft.AspNetCore.Mvc;
  
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
+ 
+using Microsoft.IdentityModel.Tokens;
  
 namespace dotnetapp.Models
+ 
 {
-    public class RegistrationModel
+ 
+    public class User
+ 
     {
-        [Required]
-        public string Username {get; set;}
  
-        [EmailAddress]
-        [Required]
- 
-        public string Email {get; set;}
- 
-        [Required]
-        public string MobileNumber {get; set;}
- 
-        [Required]
-        public string Password {get; set;}
- 
-        [Required]
-        public string UserRole {get; set;}
-    }
-}
- 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-        using System.ComponentModel.DataAnnotations;
-namespace dotnetapp.Models
-{
-public class User
- 
-{
     [Key]
+ 
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+ 
     public long UserId { get; set; }
+ 
+    // Alias for payload/tests if they use Userld instead of UserId
+ 
+    [NotMapped]
+ 
+    public long Userld
+ 
+    {
+ 
+    get { return UserId; }
+ 
+    set { UserId = value; }
+ 
+    }
+ 
     [Required]
-    [EmailAddress]
+ 
     public string Email { get; set; } = string.Empty;
+ 
     [Required]
+ 
     public string Password { get; set; } = string.Empty;
+ 
     [Required]
  
     public string Username { get; set; } = string.Empty;
  
     [Required]
+ 
     public string MobileNumber { get; set; } = string.Empty;
  
     [Required]
+ 
     public string UserRole { get; set; } = string.Empty;
  
-}
-}
+    }
+ 
+    }
+ 
  
 using System;
+ 
 using System.Collections.Generic;
+ 
 using System.Linq;
+ 
 using System.Threading.Tasks;
  
-namespace dotnetapp.Models
-{
-    public static class UserRoles
-    {
-        public const string Admin = "Admin";
- 
-        public const string User = "Customer";
-       
-    }
-}
- 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using dotnetapp.Models;
  
-using dotnetapp.Services;
+using System.ComponentModel.DataAnnotations;
  
-using Microsoft.AspNetCore.Mvc;
-namespace dotnetapp.Controllers
-{
-   
+using System.ComponentModel.DataAnnotations.Schema;
  
-[ApiController]
+using System.IdentityModel.Tokens.Jwt;
  
-[Route("api")]
+using System.Security.Claims;
  
-public class AuthenticationController : ControllerBase
+using System.Text;
  
-{
-    private readonly IAuthService _authService;
-    private readonly ApplicationDbContext _context;
-    private readonly ILogger<AuthenticationController> _logger;
-    public AuthenticationController(
-        IAuthService authService,
-        ApplicationDbContext context,
+using Microsoft.AspNetCore.Authentication.JwtBearer;
  
-        ILogger<AuthenticationController> logger)
-    {
-        _authService = authService;
-        _context = context;
-        _logger = logger;
-    }
-    [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginModel model)
-    {
-        try
-        {
- 
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            var token = await _authService.Login(model);
-            if (string.IsNullOrEmpty(token))
-            {
-                return BadRequest(new { message = "Invalid email or password" });
-            }
-            return Ok(new { token = token });
-        }
- 
-        catch (Exception ex)
- 
-        {
- 
-            _logger.LogError(ex, "Error occurred during login");
- 
-            return BadRequest(new { message = "An error occurred during login" });
- 
-        }
- 
-    }
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] User user)
-    {
-        try
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            if (user.UserRole != "Admin" && user.UserRole != "Customer")
-            {
-                return BadRequest(new { message = "Invalid user role. Allowed roles are Admin or Customer" });
-            }
-            var result = await _authService.Registration(user, user.UserRole);
- 
-            if (result != "User registered successfully")
-            {
-                return BadRequest(new { message = result });
-            }
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            return Ok(new { message = result });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred during registration");
- 
-            return BadRequest(new { message = "An error occurred during registration" });
- 
-        }
- 
-    }
- 
-}
-}
- 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using dotnetapp.Models;
 using Microsoft.AspNetCore.Authorization;
+ 
 using Microsoft.AspNetCore.Mvc;
+ 
 using Microsoft.EntityFrameworkCore;
+ 
+using Microsoft.IdentityModel.Tokens;
+ 
 namespace dotnetapp.Controllers
+ 
+{
+ 
+    using dotnetapp.Models;
+ 
+    using dotnetapp.Services;
+ 
+    [ApiController]
+ 
+    [Route("api")]
+ 
+    public class AuthenticationController : ControllerBase
+ 
+    {
+ 
+    private readonly IAuthService _authService;
+ 
+    private readonly ApplicationDbContext _context;
+ 
+    private readonly ILogger<AuthenticationController>_logger;
+ 
+    public AuthenticationController(IAuthService authService, ApplicationDbContext context, ILogger<AuthenticationController>logger)
+ 
+    {
+ 
+    _authService = authService;
+ 
+    _context = context;
+ 
+    _logger = logger;
+ 
+    }
+ 
+    [HttpPost("login")]
+ 
+    [AllowAnonymous]
+ 
+    public IActionResult Login([FromBody] LoginModel model)
+ 
+    {
+ 
+    try
+ 
+    {
+ 
+    if (!ModelState.IsValid)
+ 
+    {
+ 
+    return BadRequest("Invalid payload");
+ 
+    }
+ 
+    var token = _authService.Login(model);
+ 
+    if (string.IsNullOrEmpty(token))
+ 
+    {
+ 
+    return BadRequest("Invalid email or password");
+ 
+    }
+ 
+    return Ok(new { Token = token });
+ 
+    }
+ 
+    catch (Exception ex)
+ 
+    {
+ 
+    _logger.LogError(ex, "Error occurred during login");
+ 
+    return BadRequest("An error occurred during authentication");
+ 
+    }
+ 
+    }
+ 
+    [HttpPost("register")]
+ 
+    [AllowAnonymous]
+ 
+    public IActionResult Register([FromBody] User user)
+ 
+    {
+ 
+    try
+ 
+    {
+ 
+    if (!ModelState.IsValid)
+ 
+    {
+ 
+    return BadRequest("Invalid payload");
+ 
+    }
+ 
+    if (user.UserRole != "Admin" && user.UserRole != "Customer")
+ 
+    {
+ 
+    return BadRequest("Invalid user role");
+ 
+    }
+ 
+    var result = _authService.Registration(user, user.UserRole);
+ 
+    if (result != "User registered successfully")
+ 
+    {
+ 
+    return BadRequest(result);
+ 
+    }
+ 
+    _context.Users.Add(user);
+ 
+    _context.SaveChanges();
+ 
+    return Ok(new { Message = "User registered successfully" });
+ 
+    }
+ 
+    catch (Exception ex)
+ 
+    {
+ 
+    _logger.LogError(ex, "Error occurred during registration");
+ 
+    return BadRequest("An error occurred during registration");
+ 
+    }
+ 
+    }
+ 
+    }
+ 
+    }
+ 
+ 
+using System;
+ 
+using System.Collections.Generic;
+ 
+using System.Linq;
+ 
+using System.Threading.Tasks;
+ 
+using Microsoft.AspNetCore.Mvc;
+ 
+using System.ComponentModel.DataAnnotations;
+ 
+using System.ComponentModel.DataAnnotations.Schema;
+ 
+using System.IdentityModel.Tokens.Jwt;
+ 
+using System.Security.Claims;
+ 
+using System.Text;
+ 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+ 
+using Microsoft.AspNetCore.Authorization;
+ 
+using Microsoft.AspNetCore.Mvc;
+ 
+using Microsoft.EntityFrameworkCore;
+ 
+using dotnetapp.Models;
+ 
+using Microsoft.IdentityModel.Tokens;
+ 
+namespace dotnetapp.Controllers
+ 
 {
  
     [ApiController]
  
-    [Route("api/plants")]
+    [Route("api/books")]
  
     [Authorize]
-    public class PlantController : ControllerBase
+ 
+    public class BookController : ControllerBase
+ 
     {
-        private readonly ApplicationDbContext _context;
-   public PlantController(ApplicationDbContext context)
-        {
-            _context = context;
  
-        }
-        [HttpGet]
-        public async Task<IActionResult> Get()
+    private readonly ApplicationDbContext _context;
  
-        {
-            var plants = await _context.Plants.ToListAsync();
+    public BookController(ApplicationDbContext context)
  
-            return Ok(plants);
-        }
+    {
  
- 
-        [HttpGet("{id}")]
- 
-        public async Task<IActionResult> GetById(int id)
- 
-        {
- 
-            var plant = await _context.Plants.FindAsync(id);
- 
- 
-            if (plant == null)
- 
-            {
- 
-                return NotFound();
- 
-            }
- 
-   return Ok(plant);
- 
-        }
-        [HttpPost]
-        [Authorize(Roles = "Admin")]
- 
-        public async Task<IActionResult> Post([FromBody] Plant plant)
-        {
- 
-            if (plant == null)
-{
- 
-                return BadRequest(new { message = "Plant data is required" });
- 
-            }
-            _context.Plants.Add(plant);
- 
-            await _context.SaveChangesAsync();
- 
- 
-            return CreatedAtAction(nameof(GetById), new { id = plant.PlantId }, plant);
- 
-        }
+    _context = context;
  
     }
+ 
+    [HttpGet]
+ 
+    public async Task<IActionResult>Get()
+ 
+    {
+ 
+    var books = await _context.Books.ToListAsync();
+ 
+    return Ok(books);
+ 
+    }
+ 
+    [HttpPost]
+ 
+    [Authorize(Roles = "Admin")]
+ 
+    public async Task<IActionResult> Post([FromBody] Book book)
+ 
+    {
+ 
+    if (book == null)
+ 
+    {
+ 
+    return BadRequest("Book data is required");
+ 
+    }
+ 
+    _context.Books.Add(book);
+ 
+    await _context.SaveChangesAsync();
+ 
+    return CreatedAtAction(nameof(Get), new { id = book.BookId }, book);
+ 
+    }
+ 
+    }
+ 
 }
  
  
+using System;
+ 
+using System.Collections.Generic;
+ 
+using System.Linq;
+ 
+using System.Threading.Tasks;
+ 
+using System.ComponentModel.DataAnnotations;
+ 
+using System.ComponentModel.DataAnnotations.Schema;
+ 
+using System.IdentityModel.Tokens.Jwt;
+ 
+using System.Security.Claims;
+ 
 using System.Text;
- 
-using dotnetapp.Models;
- 
-using dotnetapp.Services;
  
 using Microsoft.AspNetCore.Authentication.JwtBearer;
  
+using Microsoft.AspNetCore.Authorization;
+ 
+using Microsoft.AspNetCore.Mvc;
+ 
 using Microsoft.EntityFrameworkCore;
  
 using Microsoft.IdentityModel.Tokens;
  
-var builder = WebApplication.CreateBuilder(args);
- 
-builder.WebHost.UseUrls("http://0.0.0.0:8080");
-builder.Services.AddControllers();
- 
-builder.Services.AddEndpointsApiExplorer();
- 
-builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
- 
-options.UseSqlServer("user id=sa;password=examlyMssql@123;database=appdb;server=localhost;persist security info=false;trusted_connection=false;encrypt=false;"));
- 
-builder.Services.AddScoped<IAuthService, AuthService>();
- 
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "ThisIsASecretKeyForJwtAuthentication12345";
- 
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "dotnetapp";
- 
-var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "dotnetapp_users";
- 
-builder.Services.AddAuthentication(options =>
- 
-{
-options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-options.RequireHttpsMetadata = false;
-options.SaveToken = true;
-options.TokenValidationParameters = new TokenValidationParameters
-{
-    ValidateIssuer = true,
-    ValidateAudience = true,
-    ValidateLifetime = true,
-    ValidateIssuerSigningKey = true,
- 
-    ValidIssuer = jwtIssuer,
- 
-    ValidAudience = jwtAudience,
- 
-    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-};
-});
- 
-builder.Services.AddAuthorization();
- 
-var app = builder.Build();
- 
-app.UseSwagger();
-app.UseSwaggerUI();
- 
-app.UseAuthentication();
- 
-app.UseAuthorization();
- 
-app.MapControllers();
- 
-app.Run();
- 
- 
- 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-    using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using dotnetapp.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
+ 
 namespace dotnetapp.Services
  
 {
-public class AuthService : IAuthService
-{
-    private readonly ApplicationDbContext _context;
-       private readonly IConfiguration _configuration;
-    private readonly PasswordHasher<User> _passwordHasher;
-    public AuthService(ApplicationDbContext context, IConfiguration configuration)
-    {
-        _context = context;
  
-        _configuration = configuration;
- 
-        _passwordHasher = new PasswordHasher<User>();
- 
-    }
-    public async Task<string> Registration(User model, string role)
+    public class AuthService : IAuthService
  
     {
-        var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
  
-        if (existingUser != null)
+        private readonly ApplicationDbContext _context;
+ 
+        private readonly IConfiguration _configuration;
+ 
+        public AuthService(ApplicationDbContext context, IConfiguration configuration)
  
         {
  
-            return "User already exists";
+            _context = context;
+ 
+            _configuration = configuration;
  
         }
-        model.UserRole = role;
-        model.Password = _passwordHasher.HashPassword(model, model.Password);
-        return "User registered successfully";
  
-    }
-    public async Task<string?> Login(LoginModel model)
-    {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
-        if (user == null)
+        public string Registeraton(User model, string role)
+ 
         {
-            return null;
+ 
+            return Registration(model, role);
+ 
         }
-        var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.Password, model.Password);
  
-        if (verificationResult == PasswordVerificationResult.Failed)
+        public string Registration(User model, string role)
+ 
         {
-            return null;
+ 
+            if (model == null)
+ 
+            {
+ 
+                return "Invalid user data";
+ 
+            }
+ 
+            if (string.IsNullOrWhiteSpace(role))
+ 
+            {
+ 
+                return "Invalid role";
+ 
+            }
+ 
+            if (_context.Users.Any(x => x.Email == model.Email))
+ 
+            {
+ 
+                return "User already exists";
+ 
+            }
+ 
+            model.UserRole = role;
+ 
+            return "User registered successfully";
+ 
         }
-        var claims = new List<Claim>
+ 
+        public string Login(LoginModel model)
+ 
         {
-            new Claim(ClaimTypes.Name, user.Username),
  
-            new Claim(ClaimTypes.Email, user.Email),
+            if (model == null)
  
-            new Claim(ClaimTypes.Role, user.UserRole),
+            {
  
-            new Claim("UserId", user.UserId.ToString())
-        };
-        return GenerateToken(claims);
-    }
-    public string GenerateToken(IEnumerable<Claim> claims)
+                return string.Empty;
+ 
+            }
+ 
+            var user = _context.Users.FirstOrDefault(x =>
+ 
+            x.Email == model.Email && x.Password == model.Password);
+ 
+            if (user == null)
+ 
+            {
+ 
+                return string.Empty;
+ 
+            }
+ 
+            var claims = new List< Claim >
  
     {
  
-        var key = _configuration["Jwt:Key"] ?? "ThisIsASecretKeyForJwtAuthentication12345";
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
  
-        var issuer = _configuration["Jwt:Issuer"] ?? "dotnetapp";
+    new Claim(ClaimTypes.Name, user.Username ?? string.Empty),
  
-        var audience = _configuration["Jwt:Audience"] ?? "dotnetapp_users";
+    new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
  
-        var duration = int.TryParse(_configuration["Jwt:DurationInMinutes"], out var mins) ? mins : 60;
+    new Claim(ClaimTypes.Role, user.UserRole ?? string.Empty)
  
+    };
  
-        var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+            return GenerateToken(claims);
  
-        var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+        }
  
+        public string GenerateToken(IEnumerable<Claim> claims)
  
-        var token = new JwtSecurityToken(
+        {
+ 
+            var key = _configuration["Jwt:Key"] ?? "ThisIsMyVerySecureJwtKeyForBooksManagement12345";
+ 
+            var issuer = _configuration["Jwt:Issuer"] ?? "dotnetapp";
+ 
+            var audience = _configuration["Jwt:Audience"] ?? "dotnetapp_users";
+ 
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+ 
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+ 
+            var token = new JwtSecurityToken(
  
             issuer: issuer,
  
@@ -512,39 +699,210 @@ public class AuthService : IAuthService
  
             claims: claims,
  
-            expires: DateTime.UtcNow.AddMinutes(duration),
+            expires: DateTime.UtcNow.AddHours(1),
  
             signingCredentials: credentials
  
-        );
+            );
  
+            return new JwtSecurityTokenHandler().WriteToken(token);
  
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        }
  
     }
  
 }
-}
  
  
 using System;
+ 
 using System.Collections.Generic;
+ 
 using System.Linq;
+ 
 using System.Threading.Tasks;
-     using System.Security.Claims;
-using dotnetapp.Models;
+ 
+using System.ComponentModel.DataAnnotations;
+ 
+using System.ComponentModel.DataAnnotations.Schema;
+ 
+using System.IdentityModel.Tokens.Jwt;
+ 
+using System.Security.Claims;
+ 
+using System.Text;
+ 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+ 
+using Microsoft.AspNetCore.Authorization;
+ 
+using Microsoft.AspNetCore.Mvc;
+ 
+using Microsoft.EntityFrameworkCore;
+ 
+using Microsoft.IdentityModel.Tokens;
  
 namespace dotnetapp.Services
-{
-public interface IAuthService
  
 {
-       Task<string> Registration(User model, string role);
-   Task<string?> Login(LoginModel model);
  
-    string GenerateToken(IEnumerable<Claim> claims);
+    using dotnetapp.Models;
+ 
+    public interface IAuthService
+ 
+    {
+ 
+        string Registeraton(User model, string role);
+ 
+        string Registration(User model, string role);
+ 
+        string Login(LoginModel model);
+ 
+        string GenerateToken(IEnumerable<Claim> claims);
+ 
+    }
  
 }
-}
+ 
+ 
+namespace dotnetapp
+ 
+{
+ 
+    using System.Text;
+ 
+    using dotnetapp.Models;
+ 
+    using dotnetapp.Services;
+ 
+    using Microsoft.AspNetCore.Authentication.JwtBearer;
+ 
+    using Microsoft.EntityFrameworkCore;
+ 
+    using Microsoft.IdentityModel.Tokens;
+ 
+    public class Program
+ 
+    {
+ 
+    public static void Main(string[] args)
+ 
+    {
+ 
+    var builder = WebApplication.CreateBuilder(args);
+ 
+    // Run on port 8080
+ 
+    builder.WebHost.UseUrls("http://0.0.0.0:8080");
+ 
+    // Add configuration values in-memory so appsettings.json is not required
+ 
+    var configValues = new Dictionary<string, string?>
+ 
+    {
+ 
+    { "ConnectionStrings:DefaultConnection", "User ID=sa;password=examlyMssql@123;server=localhost;Database=appdb;trusted_connection=false;Persist Security Info=False;Encrypt=False" },
+ 
+    { "Jwt:Key", "ThisIsMyVerySecureJwtKeyForBooksManagement12345" },
+ 
+    { "Jwt:Issuer", "dotnetapp" },
+ 
+    { "Jwt:Audience", "dotnetapp_users" },
+ 
    
+    };
+            IConfigurationBuilder configurationBuilder = builder.Configuration.AddInMemoryCollection(configValues);
+ 
+            builder.Services.AddControllers();
+ 
+    builder.Services.AddEndpointsApiExplorer();
+ 
+    builder.Services.AddSwaggerGen();
+ 
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+ 
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+ 
+    builder.Services.AddScoped<IAuthService, AuthService>();
+ 
+    var jwtKey = builder.Configuration["Jwt:Key"] ?? "ThisIsMyVerySecureJwtKeyForBooksManagement12345";
+ 
+    var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "dotnetapp";
+ 
+    var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "dotnetapp_users";
+ 
+    builder.Services.AddAuthentication(options =>
+ 
+    {
+ 
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+ 
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+ 
+    })
+ 
+    .AddJwtBearer(options =>
+ 
+    {
+ 
+    options.RequireHttpsMetadata = false;
+ 
+    options.SaveToken = true;
+ 
+    options.TokenValidationParameters = new TokenValidationParameters
+ 
+    {
+ 
+    ValidateIssuer = true,
+ 
+    ValidateAudience = true,
+ 
+    ValidateLifetime = true,
+ 
+    ValidateIssuerSigningKey = true,
+ 
+    ValidIssuer = jwtIssuer,
+ 
+    ValidAudience = jwtAudience,
+ 
+    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+ 
+    };
+ 
+    });
+ 
+    builder.Services.AddAuthorization();
+ 
+    var app = builder.Build();
+ 
+    // Create database automatically
+ 
+    using (var scope = app.Services.CreateScope())
+ 
+    {
+ 
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+ 
+    db.Database.EnsureCreated();
+ 
+    }
+ 
+    app.UseSwagger();
+ 
+    app.UseSwaggerUI();
+ 
+    app.UseAuthentication();
+ 
+    app.UseAuthorization();
+ 
+    app.MapControllers();
+ 
+    app.Run();
+ 
+    }
+ 
+    }
+ 
+}
+ 
  
