@@ -1,94 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>array operations</title>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+    content="width==device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+    <link rel="stylesheet" href="style.css">
    
 </head>
 <body>
-    <h1>array operations</h1>
-    //write your code here
-    <div>
-    <label>Enter Number 1<spna style="color: red;">*</spna></label>
-    <input type="number" name="num1" id="num1">
-</div>
+         <h1>Library Management System</h1>
  
-<div>
-    <label>Enter Number 2<spna style="color: red;">*</spna></label>
-    <input type="number" name="num2" id="num2">
-</div>
+         <div id="bookGrid">
+            <div class="grid">
+                <div="box">
+                    <p> 1984 by George Orwell</p>
+                    <p> Is Borrowed <span id="sp0"></span></p>
  
-<div>
-    <label>Enter Number 3<spna style="color: red;">*</spna></label>
-    <input type="number" name="num3" id="num3">
-</div>
+                    <div class="grid">
+                        <button id="borrowButton-0" class="borrow">Borrow</button>
+                        <button id="returnButton-0" class="return">Return</button>
+                    </div>
+                </div>
  
-<div>
-    <label>Enter Number 4<spna style="color: red;">*</spna></label>
-    <input type="number" name="num4" id="num4">
-</div>
+                <div class="box">
+                    <p> To Kill some Bird</p>
+                    <p> Is Borrowed <span id="sp1"></span></p>
  
-<div>
-    <label>Enter Number 5<spna style="color: red;">*</spna></label>
-    <input type="number" name="num5" id="num5">
-</div>
+                    <div class="grid">
+                        <button id="borrowButton-1" class="borrow">Borrow</button>
+                        <button id="returnButton-1" class="return">Return</button>
+                    </div>
  
-<button id= "calculateButton" onclick="calculate()">Calculate</button>
+                </div>
+                <div class="box">
+                    <p> The Great Gatsby</p>
+                    <p> Is Borrowed <span id="sp2"></span></p>
  
-<div id="result">
-    <p id="errorMessage" style="color: red;"></p>
-    </div>
+                    <div class="grid">
+                        <button id="borrowButton-2" class="borrow">Borrow</button>
+                        <button id="returnButton-2" class="return">Return</button>
+                    </div>
+                    </div>
  
-    <div id="maximumNo">
-       <span id="sp1"></span>
-        </div>
+         </div>
+         </div>
  
-        <div id="minimumNo">
-            <span id="sp2"></span>
-             </div>
- 
-             <div id="sumOfAllNumbers">
-                <span id="sp3"></span>
-                 </div>
- 
-                 <script src="script.js"></script>
- 
+         <script src="script.js"></script>
 </body>
 </html>
  
  
  
  
-function calculate() {
-    const ids = ["num1", "num2", "num3", "num4", "num5"];
-    const numArr = ids.map(id => Number((<HTMLInputElement>document.getElementById(id)).value));
+function setupBorrowReturn(index: number){
+    const borrowBtn = document.getElementById(`borrowButton-${index}`)as HTMLInputElement;
+    const returnBtn = document.getElementById(`returnButton-${index}`)as HTMLInputElement;
+    const status = document.getElementById(`sp${index}`)!;
  
-    if(numArr.some(n => !n)) {
-        document.getElementById("errorMessage")!.innerHTML = "Enter all the numbers";
-        return;
-    }
+    borrowBtn.addEventListener("click",() => {
+        status.innerHTML = "True";
+        returnBtn.disabled = false;
+        borrowBtn.disabled = true;
+    });
  
-    const maxNum = Math.max(...numArr);
-    const minMum = Math.min(...numArr);
-    const sum = numArr.reduce((acc,n) => acc + n, 0);
- 
-    document.getElementById("sp1")!.innerHTML =`Maximum number: ${maxNum}`;
-    document.getElementById("sp2")!.innerHTML =`Minimum number: ${minMum}`;
-    document.getElementById("sp3")!.innerHTML =`Sum of all numbers: ${sum}`;
+    returnBtn.addEventListener("click",() => {
+        status.innerHTML = "False";
+        returnBtn.disabled = true;
+        borrowBtn.disabled = false;
+    });
 }
  
-function calculate() {
-    var ids = ["num1", "num2", "num3", "num4", "num5"];
-    var numArr = ids.map(function (id) { return Number(document.getElementById(id).value); });
-    if (numArr.some(function (n) { return !n; })) {
-        document.getElementById("errorMessage").innerHTML = "Enter all the numbers";
-        return;
-    }
-    var maxNum = Math.max.apply(Math, numArr);
-    var minMum = Math.min.apply(Math, numArr);
-    var sum = numArr.reduce(function (acc, n) { return acc + n; }, 0);
-    document.getElementById("sp1").innerHTML = "Maximum number: ".concat(maxNum);
-    document.getElementById("sp2").innerHTML = "Minimum number: ".concat(minMum);
-    document.getElementById("sp3").innerHTML = "Sum of all numbers: ".concat(sum);
+[0,1,2].forEach(setupBorrowReturn);
+ 
+function setupBorrowReturn(index) {
+    var borrowBtn = document.getElementById("borrowButton-".concat(index));
+    var returnBtn = document.getElementById("returnButton-".concat(index));
+    var status = document.getElementById("sp".concat(index));
+    borrowBtn.addEventListener("click", function () {
+        status.innerHTML = "True";
+        returnBtn.disabled = false;
+        borrowBtn.disabled = true;
+    });
+    returnBtn.addEventListener("click", function () {
+        status.innerHTML = "False";
+        returnBtn.disabled = true;
+        borrowBtn.disabled = false;
+    });
 }
+[0, 1, 2].forEach(setupBorrowReturn);
  
  
