@@ -1,88 +1,91 @@
-function showDetails()
-{
-    let name = (<HTMLInputElement>document.getElementById("nameInput")).value;
-    let age = (<HTMLInputElement>document.getElementById("ageInput")).value;
-    let hobbies = (<HTMLInputElement>document.getElementById("arrayInput")).value.split(",");
-    let isStudent = (<HTMLInputElement>document.getElementById("isStudentSelect")).value;
- 
-    let TrueFasle = isStudent == "True"? true:false;
- 
-    document.getElementById("out1").innerHTML = "Name: "+name;
-    document.getElementById("out11").innerHTML = "Type: "+typeof(name);
- 
-    document.getElementById("out2").innerHTML = "Age: "+age;
-    document.getElementById("out22").innerHTML = "Type: "+typeof(age);
- 
-    document.getElementById("out3").innerHTML = "Hobbies: "+hobbies;
-    document.getElementById("out33").innerHTML = "Type: "+typeof(hobbies);
- 
-    document.getElementById("out4").innerHTML = "Student: "+isStudent;
-    document.getElementById("out44").innerHTML = "Type: "+typeof(TrueFasle);
-   
- 
-}
- 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Information</title>
+    <title>array operations</title>
+   
 </head>
 <body>
-    <div>
-        <h2>User Information</h2>
-        <label for ="nameInput">Enter name: </label>
-        <input id ="nameInput" >
+   <h1>array operations</h1>
+   <div>
+    <label>Enter Number 1 <spna style="color: red;">*</spna></label>
+    <input type="number" name ="num1" id = "num1">
+   </div>
  
-        <label for ="ageInput">Enter age: </label>
-        <input id ="ageInput">
+   <div>
+    <label>Enter Number 2 <spna style="color: red;">*</spna></label>
+    <input type="number" name ="num2" id = "num2">
+   </div>
  
-        <label for ="arrayInput">Enter hobbies(comma-separated): </label>
-        <input id ="arrayInput">
-       
-        <label for="isStudentSelect">Are you a student?(Select true/false): </label>
-        <select id="isStudentSelect">
-            <option value="true">True</option>
-            <option value="false">False</option>
-        </select>
-       
-    </div>
+   <div>
+    <label>Enter Number 3 <spna style="color: red;">*</spna></label>
+    <input type="number" name ="num3" id = "num3">
+   </div>
  
-    <button id="showInfoButton" onclick="showDetails()">Show Information</button>
+   <div>
+    <label>Enter Number 4 <spna style="color: red;">*</spna></label>
+    <input type="number" name ="num4" id = "num4">
+   </div>
  
-    <div id="output">
-        <span id="out1"></span><span id="out11"></span><br>
-        <span id="out2"></span><span id="out22"></span><br>
-        <span id="out3"></span><span id="out33"></span><br>
-        <span id="out4"></span><span id="out44"></span><br>
-    </div>
-   
+   <div>
+    <label>Enter Number 5 <spna style="color: red;">*</spna></label>
+    <input type="number" name ="num5" id = "num5">
+   </div>
  
+   <button id="calculateButton" onclick="calculate()">Calculate</button>
  
+   <div id="result">
+    <p id="errorMessage" style="color: red;"></p>
+   </div>
  
+   <div id="sumOfEven">
+   <span id="sp1"></span>
+   </div>
  
-   
-    <script src="script.js"></script>
+   <div id = "numbersGreaterThan5">
+    <span id="sp2"></span>
+   </div>
+ 
+   <script src="script.js"></script>
+ 
 </body>
 </html>
-
-
-
-
-         function showDetails() {
-    var name = document.getElementById("nameInput").value;
-    var age = document.getElementById("ageInput").value;
-    var hobbies = document.getElementById("arrayInput").value.split(",");
-    var isStudent = document.getElementById("isStudentSelect").value;
-    var TrueFasle = isStudent == "True" ? true : false;
-    document.getElementById("out1").innerHTML = "Name: " + name;
-    document.getElementById("out11").innerHTML = "Type: " + typeof (name);
-    document.getElementById("out2").innerHTML = "Age: " + age;
-    document.getElementById("out22").innerHTML = "Type: " + typeof (age);
-    document.getElementById("out3").innerHTML = "Hobbies: " + hobbies;
-    document.getElementById("out33").innerHTML = "Type: " + typeof (hobbies);
-    document.getElementById("out4").innerHTML = "Student: " + isStudent;
-    document.getElementById("out44").innerHTML = "Type: " + typeof (TrueFasle);
+ 
+ 
+ 
+ 
+function calculate()
+{
+    const ids = ["num1" , "num2", "num3", "num4", "num5"];
+ 
+    const numArr = ids.map(id => Number((<HTMLInputElement>document.getElementById(id)).value));
+ 
+    if(numArr.some( n=> !n)){
+        document.getElementById("errorMessage")!.innerHTML = "Enter all the numbers";
+        return;
+    }
+   
+    // const maxNum = Math.max(...numArr);
+    // const minNum = Math.min(...numArr);
+    const nums = numArr.filter( n => n >= 5);
+    const sum = numArr.reduce((acc, n) => acc + (n % 2 === 0 ? n : 0), 0);
+ 
+    document.getElementById("sp1").innerHTML = `Sum of even numbers: ${sum}`;
+    document.getElementById("sp2").innerHTML = `Numbers greater than 5: ${nums.join(",")}`;
 }
+ 
+function calculate() {
+    var ids = ["num1", "num2", "num3", "num4", "num5"];
+    var numArr = ids.map(function (id) { return Number(document.getElementById(id).value); });
+    if (numArr.some(function (n) { return !n; })) {
+        document.getElementById("errorMessage").innerHTML = "Enter all the numbers";
+        return;
+    }
+    // const maxNum = Math.max(...numArr);
+    // const minNum = Math.min(...numArr);
+    var nums = numArr.filter(function (n) { return n >= 5; });
+    var sum = numArr.reduce(function (acc, n) { return acc + (n % 2 === 0 ? n : 0); }, 0);
+    document.getElementById("sp1").innerHTML = "Sum of even numbers: ".concat(sum);
+    document.getElementById("sp2").innerHTML = "Numbers greater than 5: ".concat(nums.join(","));
+}
+ 
  
