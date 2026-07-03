@@ -1,55 +1,35 @@
-export class Product{
-    id: number;
-    name: string;
-    category: string;
-    price: number;
-}
+<div>
+    <h2>Dynamic Message Converter</h2>
+    <span>{{messageElement}}</span>
+    <button (click)="updateMessage()">Update Message</button>
+</div>
  
-<h1>Product List</h1>
  
-<table>
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Name</th>
-      <th>Category</th>
-      <th>Price</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor = "let item of productData">
-      <td>{{item.id}}</td>
-      <td>{{item.name}}</td>
-      <td>{{item.category}}</td>
-      <td>{{item.price}}</td>
-    </tr>
-  </tbody>
-</table>
+----------------------------
  
 import { Component } from '@angular/core';
-import { Product } from './product.model';
+import { OnInit } from '@angular/core';
+import { ViewChild } from '@angular/core';
+import { ElementRef } from '@angular/core';
  
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  selector: 'app-dynamic-message',
+  templateUrl: './dynamic-message.component.html',
+  styleUrls: ['./dynamic-message.component.css']
 })
-export class AppComponent {
-  //title = 'angularapp';
-  productData : Product[] = [{
-    id: 1,
-    name: "Headphone",
-    category: "Electronic",
-    price: 100000
-  },
-  {
-    id: 2,
-    name: "Bottle",
-    category: "Bottle",
-    price: 8000
  
+export class DynamicMessageComponent {
+  messageElement:string = "Initial Message";
+ 
+  updateMessage(){
+    this.messageElement="New message generated on button click!"
   }
-]
 }
  
+ 
+----------------------------
+app.comp.html
+ 
+<app-dynamic-message></app-dynamic-message>
+<router-outlet></router-outlet>
  
