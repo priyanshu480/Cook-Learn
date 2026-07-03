@@ -1,35 +1,28 @@
 <div>
-    <h2>Dynamic Message Converter</h2>
-    <span>{{messageElement}}</span>
-    <button (click)="updateMessage()">Update Message</button>
+    <h2 class="user-name">{{user.name}}</h2>
+    <p class="user-age">Age: {{user.age}}</p>
+    <p class="user-email">Email: {{user.email}}</p>
+ 
 </div>
  
  
-----------------------------
+// user-profile html
+ 
+//user-profile component.ts
  
 import { Component } from '@angular/core';
-import { OnInit } from '@angular/core';
-import { ViewChild } from '@angular/core';
-import { ElementRef } from '@angular/core';
+import { UserProfile } from 'models/userprofile.model';
  
 @Component({
-  selector: 'app-dynamic-message',
-  templateUrl: './dynamic-message.component.html',
-  styleUrls: ['./dynamic-message.component.css']
+  selector: 'app-user-profile',
+  templateUrl: './user-profile.component.html',
+  styleUrls: ['./user-profile.component.css']
 })
- 
-export class DynamicMessageComponent {
-  messageElement:string = "Initial Message";
- 
-  updateMessage(){
-    this.messageElement="New message generated on button click!"
-  }
+export class UserProfileComponent {
+user: UserProfile={
+  name: 'John Doe',
+  age: 30,
+  email: "john.doe@example.com"
+};
 }
- 
- 
-----------------------------
-app.comp.html
- 
-<app-dynamic-message></app-dynamic-message>
-<router-outlet></router-outlet>
  
