@@ -1,93 +1,133 @@
+interface Product {
+    id: number;
+    name: string;
+    price: number;
+}
+ 
+interface CartItem {
+    product: Product;
+    quantity: number;
+}
+ 
+const products: Product[] = [
+    { id: 1, name: "Product 1", price: 10 },
+    { id: 2, name: "Product 2", price: 20 },
+    { id: 3, name: "Product 3", price: 30 }
+];
+ 
+let cart: CartItem[] = [];
+ 
+const productContainer = document.getElementById("productContainer") as HTMLDivElement;
+const cartList = document.getElementById("cartList") as HTMLUListElement;
+ 
+function displayProducts(): void {
+ 
+    productContainer.innerHTML = "";
+ 
+    products.forEach(function (product) {
+ 
+        const productDiv = document.createElement("div");
+        productDiv.className = "product";
+ 
+        productDiv.innerHTML =
+            `<p>${product.name}</p>
+             <p>$${product.price.toFixed(2)}</p>`;
+ 
+        const button = document.createElement("button");
+        button.textContent = "Add to Cart";
+ 
+        button.addEventListener("click", function () {
+            addToCart(product.id);
+        });
+ 
+        productDiv.appendChild(button);
+        productContainer.appendChild(productDiv);
+    });
+}
+ 
+function addToCart(productId: number): void {
+ 
+    const existingItem = cart.find(function (item) {
+        return item.product.id === productId;
+    });
+ 
+    if (existingItem) {
+        existingItem.quantity++;
+    } else {
+ 
+        const product = products.find(function (p) {
+            return p.id === productId;
+        });
+ 
+        if (product) {
+            cart.push({
+                product: product,
+                quantity: 1
+            });
+        }
+    }
+ 
+    displayCart();
+}
+ 
+function removeFromCart(productId: number): void {
+ 
+    cart = cart.filter(function (item) {
+        return item.product.id !== productId;
+    });
+ 
+    displayCart();
+}
+ 
+function displayCart(): void {
+ 
+    cartList.innerHTML = "";
+ 
+    cart.forEach(function (item) {
+ 
+        const li = document.createElement("li");
+        li.className = "cart-item";
+ 
+        li.innerHTML =
+            `${item.product.name} - $${item.product.price.toFixed(2)} x ${item.quantity}`;
+ 
+        const removeButton = document.createElement("button");
+        removeButton.textContent = "Remove";
+ 
+        removeButton.addEventListener("click", function () {
+            removeFromCart(item.product.id);
+        });
+ 
+        li.appendChild(document.createElement("br"));
+        li.appendChild(removeButton);
+ 
+        cartList.appendChild(li);
+    });
+}
+ 
+displayProducts();
+ 
+ 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-    content="width==device-width, initial-scale=1.0">
-    <title>Library Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product List and Cart Management</title>
     <link rel="stylesheet" href="style.css">
-   
 </head>
 <body>
-         <h1>Library Management System</h1>
  
-         <div id="bookGrid">
-            <div class="grid">
-                <div="box">
-                    <p> 1984 by George Orwell</p>
-                    <p> Is Borrowed <span id="sp0"></span></p>
+    <h1>Product List</h1>
  
-                    <div class="grid">
-                        <button id="borrowButton-0" class="borrow">Borrow</button>
-                        <button id="returnButton-0" class="return">Return</button>
-                    </div>
-                </div>
+    <div id="productContainer"></div>
  
-                <div class="box">
-                    <p> To Kill some Bird</p>
-                    <p> Is Borrowed <span id="sp1"></span></p>
+    <h2>Cart</h2>
  
-                    <div class="grid">
-                        <button id="borrowButton-1" class="borrow">Borrow</button>
-                        <button id="returnButton-1" class="return">Return</button>
-                    </div>
+    <ul id="cartList"></ul>
  
-                </div>
-                <div class="box">
-                    <p> The Great Gatsby</p>
-                    <p> Is Borrowed <span id="sp2"></span></p>
+    <script src="script.js"></script>
  
-                    <div class="grid">
-                        <button id="borrowButton-2" class="borrow">Borrow</button>
-                        <button id="returnButton-2" class="return">Return</button>
-                    </div>
-                    </div>
- 
-         </div>
-         </div>
- 
-         <script src="script.js"></script>
 </body>
 </html>
- 
- 
- 
- 
-function setupBorrowReturn(index: number){
-    const borrowBtn = document.getElementById(`borrowButton-${index}`)as HTMLInputElement;
-    const returnBtn = document.getElementById(`returnButton-${index}`)as HTMLInputElement;
-    const status = document.getElementById(`sp${index}`)!;
- 
-    borrowBtn.addEventListener("click",() => {
-        status.innerHTML = "True";
-        returnBtn.disabled = false;
-        borrowBtn.disabled = true;
-    });
- 
-    returnBtn.addEventListener("click",() => {
-        status.innerHTML = "False";
-        returnBtn.disabled = true;
-        borrowBtn.disabled = false;
-    });
-}
- 
-[0,1,2].forEach(setupBorrowReturn);
- 
-function setupBorrowReturn(index) {
-    var borrowBtn = document.getElementById("borrowButton-".concat(index));
-    var returnBtn = document.getElementById("returnButton-".concat(index));
-    var status = document.getElementById("sp".concat(index));
-    borrowBtn.addEventListener("click", function () {
-        status.innerHTML = "True";
-        returnBtn.disabled = false;
-        borrowBtn.disabled = true;
-    });
-    returnBtn.addEventListener("click", function () {
-        status.innerHTML = "False";
-        returnBtn.disabled = true;
-        borrowBtn.disabled = false;
-    });
-}
-[0, 1, 2].forEach(setupBorrowReturn);
- 
  
