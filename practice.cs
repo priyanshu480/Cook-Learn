@@ -1,194 +1,334 @@
-s1w6d3
+s2w6d3
+
+===
 
 q1
 
-============
+===================
 
-book-list.component.ts
+recipe.model.ts
 
-import { Component } from '@angular/core';
- 
-interface Book{
+export class Recipe{
 
-  title : string;
+    id:number;
 
-  completed: boolean;
+    name:string;
 
-}
- 
-@Component({
+    type:string;
 
-  selector: 'app-book-list',
+    ingredients:string[];
 
-  templateUrl: './book-list.component.html',
+    instructions:string;
 
-  styleUrls: ['./book-list.component.css']
+    constructor(
 
-})
+        id:number,
 
-export class BookListComponent {
+        name:string,
 
-  books : Book[]=[];
+        type:string,
 
-  newBookTitle: string='';
+        ingredients:string[],
 
-  addBook():void
+        instructions:string
 
-  {
+    ){
 
-   let trimmedNetBook :string=this.newBookTitle.trim();
+        this.id=id;
 
-    if(trimmedNetBook){
+        this.name=name;
 
-      this.books.push({title:trimmedNetBook,completed:false});
+        this.type=type;
 
-      this.newBookTitle='';
+        this.ingredients=ingredients;
+
+        this.instructions=instructions;
 
     }
 
-  }
+}
 
-  completeBook(book:Book)
+============
 
-  {
+recipe-list.component.ts
 
-    book.completed = !book.completed;
+import { Component } from '@angular/core';
 
-  }
+//import { Recipe } from '../model/recipe.model';
+
+export interface Recipe{
+
+       id:number,
+
+       name:string,
+
+      type:string,
+
+       ingredients:string[],
+
+     instructions:string
+
+}
+
+@Component({
+
+  selector: 'app-recipe-list',
+
+  templateUrl: './recipe-list.component.html',
+
+  styleUrls: ['./recipe-list.component.css']
+
+})
+
+export class RecipeListComponent {
+
+  recipes: Recipe[]=[
+
+    {
+
+    id:1,
+
+    name:'Pancakes',
+
+    type:'Breakfast',
+
+    ingredients:['Flour','Milk','Eggs','Butter'],
+
+    instructions:'Mix flour,milk and eggs.Cook in a pan with butter.'
+
+    },
+
+    {
+
+      id:2,
+
+      name:'Spaghetti Carbonara',
+
+      type:'Dinner',
+
+      ingredients:['Spaghetti','Eggs','Bacon','Parmesan cheese'],
+
+      instructions:'Mix flour,milk and eggs.Cook in a pan with butter.'
+
+    }
+
  
-  deleteBook(index:number)
+  ];
 
-  {
+  selectedRecipe: Recipe|null =null;
 
-    this.books.splice(index,1);
+  showDetails(recipe:Recipe): void{
+
+      this.selectedRecipe=recipe;
+
+  }
+
+  hideDetails(){
+
+    this.selectedRecipe=null;
+
+  }
+
+  deleteRecipe(recipe:Recipe){
+
+     this.recipes=this.recipes.filter(r=>r.id!==recipe.id);
+
+     if(this.selectedRecipe?.id===recipe.id){
+
+      this.selectedRecipe=null;
+
+     }
 
   }
  
 }
 
-==========
+=============
 
-book-list.component.html
-<div>
-<input type="text" [(ngModel)]="newBookTitle" placeholder="Enter book title"/>
-<button (click)="addBook()">Add Book</button>
+recipe-list.component.html
+<h1 class="heading">Recipe Manager</h1>
+<div class="recipe-list">
+<div *ngFor="let recipe of recipes" class="recipe">
+<h3>{{recipe.name}}({{recipe.type}})</h3>
+<p>{{recipe.ingredients.join(', ')}}</p>
+<button (click)="showDetails(recipe)">View Details</button>
 </div>
-<ul>
-<li *ngFor="let item of books; let i=index ">
-<span [style.text-decoration]="item.completed?'line-through':'none'">{{item.title}}</span>
-<button (click)="completeBook(item)">Completed</button>
-<button (click)="deleteBook(i)">Delete</button>
-</li>
-</ul>
+</div>
+<div *ngIf="selectedRecipe" class="recipe-details-container">
+<h2>Recipe Details</h2>
+<p><strong>Name:</strong>{{selectedRecipe.name}}</p>
+<p><strong>Type:</strong>{{selectedRecipe.type}}</p>
+<p><strong>Ingredients:</strong>{{selectedRecipe.ingredients.join(', ')}}</p>
+<p><strong>Instructions:</strong>{{selectedRecipe.instructions}}</p>
+<button (click)="hideDetails()">Hide Details</button>
+<button (click)="deleteRecipe(selectedRecipe)">Delete</button>
+</div>
 
-=======
-
-app.component.html
-<app-book-list></app-book-list>
-
-=================================
+==============
 
 q2
 
-shopping-list.component.ts
+quiz.component.ts
 
 import { Component } from '@angular/core';
  
-interface Item {
- 
-  name: string;
- 
-  purchased: boolean;
- 
-}
- 
+import { quizQuestions } from '../../quiz';
+
 @Component({
  
-  selector: 'app-shopping-list',
+  selector: 'app-quiz',
  
-  templateUrl: './shopping-list.component.html',
+  templateUrl: './quiz.component.html',
  
-  styleUrls: ['./shopping-list.component.css']
+  styleUrls: ['./quiz.component.css']
  
 })
  
-export class ShoppingListComponent {
+export class QuizComponent {
  
-  items: Item[] = [];
+  quizQuestions = quizQuestions;
  
-  newItemName: string = '';
+  currentQuestionIndex: number = 0;
  
-  addItem(): void {
+  showFeedback: boolean = false;
  
-    if (this.newItemName.trim() !== '') {
+  feedback: string = '';
  
-    this.items.push({
+  score: number = 0;
  
-    name: this.newItemName,
+  selectedOptionIndex: number | null = null;
  
-    purchased: false
+  quizEnded: boolean = false;
  
-    });
+  checkAnswer(optionIndex: number): void {
  
-    this.newItemName = '';
+    if (this.showFeedback) {
+ 
+    return;
+ 
+    }
+ 
+    this.selectedOptionIndex = optionIndex;
+ 
+    const currentQuestion = this.quizQuestions[this.currentQuestionIndex];
+ 
+    if (currentQuestion.options[optionIndex]=== currentQuestion.correctAnswer) {
+ 
+    this.feedback = 'Correct Answer!';
+ 
+    this.score++;
+ 
+    } else {
+ 
+    this.feedback = 'Incorrect Answer!';
+ 
+    }
+ 
+    this.showFeedback = true;
+ 
+  }
+ 
+  nextQuestion(): void {
+ 
+    this.currentQuestionIndex++;
+ 
+    this.showFeedback = false;
+ 
+    this.feedback = '';
+ 
+    this.selectedOptionIndex = null;
+ 
+    if (this.currentQuestionIndex >= this.quizQuestions.length) {
+ 
+    this.endQuiz();
  
     }
  
   }
  
-  purchaseItem(item: Item): void {
+  endQuiz(): void {
  
-    item.purchased = !item.purchased;
- 
-  }
- 
-  deleteItem(index: number): void {
- 
-    this.items.splice(index, 1);
+    this.quizEnded = true;
  
   }
  
-}
+  restartQuiz(): void {
+ 
+    this.currentQuestionIndex = 0;
+ 
+    this.showFeedback = false;
+ 
+    this.feedback = '';
+ 
+    this.score = 0;
+ 
+    this.selectedOptionIndex = null;
+ 
+    this.quizEnded = false;
+ 
+  }
+ 
+}=======
 
-===========
-
-shopping-list.component.html
-<h2>Shopping List</h2>
+quiz.component.html
+<div class="quiz-container">
  
-<input
+    <h1>Welcome to the Interactive Quiz Application</h1>
  
-  type="text"
+    <div *ngIf="!quizEnded">
  
-  [(ngModel)]="newItemName"
+        <h2>
  
-  placeholder="Enter item name">
+            Question {{ currentQuestionIndex + 1 }} of {{ quizQuestions.length }}
  
-<button (click)="addItem()">Add Item`</button>`
+        </h2>
  
-<ul>
+        <p class="question">
  
-<li *ngFor="let item of items; let i = index">
+            {{ quizQuestions[currentQuestionIndex].question }}
  
-    <span>{{ item.name }}</span>
+        </p>
  
-    <button (click)="purchaseItem(item)">
+        <ul>
+<li *ngFor="let option of quizQuestions[currentQuestionIndex].options; let i = index"(click)="checkAnswer(i)" [ngClass]="{  'correct': showFeedback && i === quizQuestions[currentQuestionIndex].correctAnswer,     'incorrect': showFeedback && i === selectedOptionIndex && i !== quizQuestions[currentQuestionIndex].correctAnswer}">
  
-    Purchased
+                {{ option }}
  
-    </button>
+            </li>
  
-    <button (click)="deleteItem(i)">
+        </ul>
  
-    Delete
+        <p *ngIf="showFeedback" class="feedback">
  
-    </button>
+            {{ feedback }}
  
-</li>
+        </p>
  
-</ul>
+        <button *ngIf="showFeedback" (click)="nextQuestion()">
  
-==========
-
-app.component.html
-<app-shopping-list></app-shopping-list>
+            Next Question
+ 
+        </button>
+ 
+    </div>
+ 
+    <div *ngIf="quizEnded">
+ 
+        <h2>Quiz Completed!</h2>
+ 
+        <p class="score">
+ 
+            Your Final Score: {{ score }} / {{ quizQuestions.length }}
+ 
+        </p>
+ 
+        <button (click)="restartQuiz()">
+ 
+            Restart Quiz
+ 
+        </button>
+ 
+    </div>
+ 
+</div>
  
