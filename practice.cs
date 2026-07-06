@@ -1,334 +1,130 @@
-s2w6d3
-
-===
-
-q1
-
-===================
-
-recipe.model.ts
-
-export class Recipe{
-
-    id:number;
-
-    name:string;
-
-    type:string;
-
-    ingredients:string[];
-
-    instructions:string;
-
-    constructor(
-
-        id:number,
-
-        name:string,
-
-        type:string,
-
-        ingredients:string[],
-
-        instructions:string
-
-    ){
-
-        this.id=id;
-
-        this.name=name;
-
-        this.type=type;
-
-        this.ingredients=ingredients;
-
-        this.instructions=instructions;
-
-    }
-
-}
-
-============
-
-recipe-list.component.ts
-
-import { Component } from '@angular/core';
-
-//import { Recipe } from '../model/recipe.model';
-
-export interface Recipe{
-
-       id:number,
-
-       name:string,
-
-      type:string,
-
-       ingredients:string[],
-
-     instructions:string
-
-}
-
-@Component({
-
-  selector: 'app-recipe-list',
-
-  templateUrl: './recipe-list.component.html',
-
-  styleUrls: ['./recipe-list.component.css']
-
-})
-
-export class RecipeListComponent {
-
-  recipes: Recipe[]=[
-
-    {
-
-    id:1,
-
-    name:'Pancakes',
-
-    type:'Breakfast',
-
-    ingredients:['Flour','Milk','Eggs','Butter'],
-
-    instructions:'Mix flour,milk and eggs.Cook in a pan with butter.'
-
-    },
-
-    {
-
-      id:2,
-
-      name:'Spaghetti Carbonara',
-
-      type:'Dinner',
-
-      ingredients:['Spaghetti','Eggs','Bacon','Parmesan cheese'],
-
-      instructions:'Mix flour,milk and eggs.Cook in a pan with butter.'
-
-    }
-
+import { Pipe, PipeTransform } from '@angular/core';
+@Pipe({
  
-  ];
-
-  selectedRecipe: Recipe|null =null;
-
-  showDetails(recipe:Recipe): void{
-
-      this.selectedRecipe=recipe;
-
-  }
-
-  hideDetails(){
-
-    this.selectedRecipe=null;
-
-  }
-
-  deleteRecipe(recipe:Recipe){
-
-     this.recipes=this.recipes.filter(r=>r.id!==recipe.id);
-
-     if(this.selectedRecipe?.id===recipe.id){
-
-      this.selectedRecipe=null;
-
-     }
-
-  }
- 
-}
-
-=============
-
-recipe-list.component.html
-<h1 class="heading">Recipe Manager</h1>
-<div class="recipe-list">
-<div *ngFor="let recipe of recipes" class="recipe">
-<h3>{{recipe.name}}({{recipe.type}})</h3>
-<p>{{recipe.ingredients.join(', ')}}</p>
-<button (click)="showDetails(recipe)">View Details</button>
-</div>
-</div>
-<div *ngIf="selectedRecipe" class="recipe-details-container">
-<h2>Recipe Details</h2>
-<p><strong>Name:</strong>{{selectedRecipe.name}}</p>
-<p><strong>Type:</strong>{{selectedRecipe.type}}</p>
-<p><strong>Ingredients:</strong>{{selectedRecipe.ingredients.join(', ')}}</p>
-<p><strong>Instructions:</strong>{{selectedRecipe.instructions}}</p>
-<button (click)="hideDetails()">Hide Details</button>
-<button (click)="deleteRecipe(selectedRecipe)">Delete</button>
-</div>
-
-==============
-
-q2
-
-quiz.component.ts
-
-import { Component } from '@angular/core';
- 
-import { quizQuestions } from '../../quiz';
-
-@Component({
- 
-  selector: 'app-quiz',
- 
-  templateUrl: './quiz.component.html',
- 
-  styleUrls: ['./quiz.component.css']
+  name: 'searchFilter'
  
 })
  
-export class QuizComponent {
+export class SearchFilterPipe implements PipeTransform {
  
-  quizQuestions = quizQuestions;
- 
-  currentQuestionIndex: number = 0;
- 
-  showFeedback: boolean = false;
- 
-  feedback: string = '';
- 
-  score: number = 0;
- 
-  selectedOptionIndex: number | null = null;
- 
-  quizEnded: boolean = false;
- 
-  checkAnswer(optionIndex: number): void {
- 
-    if (this.showFeedback) {
- 
-    return;
- 
-    }
- 
-    this.selectedOptionIndex = optionIndex;
- 
-    const currentQuestion = this.quizQuestions[this.currentQuestionIndex];
- 
-    if (currentQuestion.options[optionIndex]=== currentQuestion.correctAnswer) {
- 
-    this.feedback = 'Correct Answer!';
- 
-    this.score++;
- 
-    } else {
- 
-    this.feedback = 'Incorrect Answer!';
- 
-    }
- 
-    this.showFeedback = true;
+  transform(items:any[] ,searchterm:string): any[] {
+    if(!items || !searchterm){
+    return items;
  
   }
  
-  nextQuestion(): void {
- 
-    this.currentQuestionIndex++;
- 
-    this.showFeedback = false;
- 
-    this.feedback = '';
- 
-    this.selectedOptionIndex = null;
- 
-    if (this.currentQuestionIndex >= this.quizQuestions.length) {
- 
-    this.endQuiz();
- 
-    }
+    searchterm = searchterm.toLowerCase();
+    return items.filter(item=> JSON.stringify(item).toLowerCase().includes(searchterm));
  
   }
  
-  endQuiz(): void {
+}
  
-    this.quizEnded = true;
+import { Component } from '@angular/core';
  
-  }
+@Component({
+  selector: 'app-search',
+  templateUrl: './search.component.html',
+  styleUrls: ['./search.component.css']
+})
+export class SearchComponent {
  
-  restartQuiz(): void {
+  searchText:string='';
  
-    this.currentQuestionIndex = 0;
+items = [
  
-    this.showFeedback = false;
+  {id:1,name:'Apple',category:'Fruit'},
  
-    this.feedback = '';
+  {id:2,name:'Banana',category:'Fruit'},
  
-    this.score = 0;
+  {id:3,name:'Carrot',category:'Vegetable'}
  
-    this.selectedOptionIndex = null;
+   ];
+}
  
-    this.quizEnded = false;
  
-  }
  
-}=======
-
-quiz.component.html
-<div class="quiz-container">
  
-    <h1>Welcome to the Interactive Quiz Application</h1>
  
-    <div *ngIf="!quizEnded">
+<input type="text" placeholder="Search..." [(ngModel)]="searchText">
  
-        <h2>
+<div>
  
-            Question {{ currentQuestionIndex + 1 }} of {{ quizQuestions.length }}
+    <ul>
  
-        </h2>
+    <li *ngFor="let item of items | searchFilter: searchText">
  
-        <p class="question">
+    {{item.name}} - {{item.category}}
  
-            {{ quizQuestions[currentQuestionIndex].question }}
+    </li>
  
-        </p>
- 
-        <ul>
-<li *ngFor="let option of quizQuestions[currentQuestionIndex].options; let i = index"(click)="checkAnswer(i)" [ngClass]="{  'correct': showFeedback && i === quizQuestions[currentQuestionIndex].correctAnswer,     'incorrect': showFeedback && i === selectedOptionIndex && i !== quizQuestions[currentQuestionIndex].correctAnswer}">
- 
-                {{ option }}
- 
-            </li>
- 
-        </ul>
- 
-        <p *ngIf="showFeedback" class="feedback">
- 
-            {{ feedback }}
- 
-        </p>
- 
-        <button *ngIf="showFeedback" (click)="nextQuestion()">
- 
-            Next Question
- 
-        </button>
- 
-    </div>
- 
-    <div *ngIf="quizEnded">
- 
-        <h2>Quiz Completed!</h2>
- 
-        <p class="score">
- 
-            Your Final Score: {{ score }} / {{ quizQuestions.length }}
- 
-        </p>
- 
-        <button (click)="restartQuiz()">
- 
-            Restart Quiz
- 
-        </button>
- 
-    </div>
+    </ul>
  
 </div>
+ 
+<app-search></app-search>
+<router-outlet></router-outlet>
+ 
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+ 
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { SearchComponent } from './search/search.component';
+import { SearchFilterPipe } from './pipes/search-filter.pipe';
+import { FormsModule } from '@angular/forms';
+ 
+@NgModule({
+  declarations: [
+    AppComponent,
+    SearchComponent,
+    SearchFilterPipe
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    FormsModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+ 
+ 
+import { SearchFilterPipe } from './search-filter.pipe';
+describe('SearchFilterPipe', () => {
+  let pipe: SearchFilterPipe;
+ 
+  beforeEach(() => {
+    pipe = new SearchFilterPipe();
+  });
+  fit('create_an_instance', () => {
+    const pipe = new SearchFilterPipe();
+    expect(pipe).toBeTruthy();
+  });
+ 
+  fit('should_return_the_original_items_if_either_items_or_searchTerm_is_falsy', () => {
+    const items = [
+      { id: 1, name: 'Apple', category: 'Fruit' },
+      { id: 2, name: 'Banana', category: 'Fruit' },
+      { id: 3, name: 'Carrot', category: 'Vegetable' }
+    ];
+    const searchTerm = '';
+    const result = (pipe as any).transform(items, searchTerm);
+    expect(result).toEqual(items);
+  });
+ 
+  fit('should_return_filtered_items_based_on_the_search_term', () => {
+    const items = [
+      { id: 1, name: 'Apple', category: 'Fruit' },
+      { id: 2, name: 'Banana', category: 'Fruit' },
+      { id: 3, name: 'Carrot', category: 'Vegetable' }
+    ];
+    const searchTerm = 'apple';
+    const result = (pipe as any).transform(items, searchTerm);
+    expect(result).toEqual([{ id: 1, name: 'Apple', category: 'Fruit' }]);
+  });
+ 
+});
+ 
  
