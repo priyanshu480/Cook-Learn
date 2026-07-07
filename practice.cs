@@ -1,130 +1,116 @@
-import { Pipe, PipeTransform } from '@angular/core';
-@Pipe({
+Q1:
+
+===
  
-  name: 'searchFilter'
- 
-})
- 
-export class SearchFilterPipe implements PipeTransform {
- 
-  transform(items:any[] ,searchterm:string): any[] {
-    if(!items || !searchterm){
-    return items;
- 
-  }
- 
-    searchterm = searchterm.toLowerCase();
-    return items.filter(item=> JSON.stringify(item).toLowerCase().includes(searchterm));
- 
-  }
- 
+employee.model.ts
+
+------------------
+
+export class ContactDetails
+
+{
+
+    address : string ="";
+
+    phone : string = "";
+
 }
  
+export class Employee
+
+{
+
+    FirstName : string = "";
+
+    LastName : string = "";
+
+    Gender : string = "";
+
+    Email : string = "";
+
+    TermsOfConditions : boolean = false;
+ 
+    // Creating an object of the class ContactDetails{}
+
+    // Create a variable of ContactDetails(-> contactDetails), whose type is ContactDetails, and immediately create an object of ContactDetails.
+
+    contactDetails : ContactDetails = new ContactDetails(); // c# -> ContactDetails contactDetails = new ContactDetails();
+
+}
+ 
+ 
+employee-form.component.ts
+
+---------------------------
+
 import { Component } from '@angular/core';
- 
+
+import { Employee } from '../models/employee.model';
+
 @Component({
-  selector: 'app-search',
-  templateUrl: './search.component.html',
-  styleUrls: ['./search.component.css']
+
+  selector: 'app-employee-form',
+
+  templateUrl: './employee-form.component.html',
+
+  styleUrls: ['./employee-form.component.css']
+
 })
-export class SearchComponent {
- 
-  searchText:string='';
- 
-items = [
- 
-  {id:1,name:'Apple',category:'Fruit'},
- 
-  {id:2,name:'Banana',category:'Fruit'},
- 
-  {id:3,name:'Carrot',category:'Vegetable'}
- 
-   ];
+
+export class EmployeeFormComponent {
+
+  employee : Employee = new Employee(); // new Employee Object(employee) created 
+
 }
  
  
+employee-form.component.ts
+
+---------------------------
+<form> 
+<label>First Name:</label>
+<br>
+<input type="text" id="firstName" [(ngModel)]="employee.FirstName">
+<br>
+<label>Last Name:</label>
+<br>
+<input type="text" id="lastName" [(ngModel)]="employee.LastName">
+<br><br>
+ 
+    <!-- GENDER RADIO -->
+<label for="gender">Gender:</label>
+<br>
+<!-- If user selects value="Male" -> employee.Gender = "Male"  -->
+<input type="radio" name="Gender" value="Male" [(ngModel)]="employee.Gender">Male
+<input type="radio" name="Gender" value="Female" [(ngModel)]="employee.Gender">Female
+<br><br>
+ 
+    <!-- EMAIL -->
+<label for="email">Email:</label>
+<br>
+<input type="email" id="email" [(ngModel)]="employee.Email">
+<br><br>
+ 
+    <!-- TERMS AND CONDITION CHECKBOX -->
+<label>Terms and Conditions:</label>
+<br>
+<input type="checkbox" id="termsConditions" [(ngModel)]="employee.TermsOfConditions">
+<br><br>
+ 
+    <!-- Address -->
+<label for="">Address:</label>
+<br>
+<input type="text" id="address" [(ngModel)]="employee.contactDetails.address">
+<br><br>
+ 
+    <!-- Phone -->
+<label>Phone:</label>
+<br>
+<input type="text" id="phone" [(ngModel)]="employee.contactDetails.phone">
+<br><br>
  
  
- 
-<input type="text" placeholder="Search..." [(ngModel)]="searchText">
- 
-<div>
- 
-    <ul>
- 
-    <li *ngFor="let item of items | searchFilter: searchText">
- 
-    {{item.name}} - {{item.category}}
- 
-    </li>
- 
-    </ul>
- 
-</div>
- 
-<app-search></app-search>
-<router-outlet></router-outlet>
- 
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
- 
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-import { SearchComponent } from './search/search.component';
-import { SearchFilterPipe } from './pipes/search-filter.pipe';
-import { FormsModule } from '@angular/forms';
- 
-@NgModule({
-  declarations: [
-    AppComponent,
-    SearchComponent,
-    SearchFilterPipe
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    FormsModule
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
- 
- 
-import { SearchFilterPipe } from './search-filter.pipe';
-describe('SearchFilterPipe', () => {
-  let pipe: SearchFilterPipe;
- 
-  beforeEach(() => {
-    pipe = new SearchFilterPipe();
-  });
-  fit('create_an_instance', () => {
-    const pipe = new SearchFilterPipe();
-    expect(pipe).toBeTruthy();
-  });
- 
-  fit('should_return_the_original_items_if_either_items_or_searchTerm_is_falsy', () => {
-    const items = [
-      { id: 1, name: 'Apple', category: 'Fruit' },
-      { id: 2, name: 'Banana', category: 'Fruit' },
-      { id: 3, name: 'Carrot', category: 'Vegetable' }
-    ];
-    const searchTerm = '';
-    const result = (pipe as any).transform(items, searchTerm);
-    expect(result).toEqual(items);
-  });
- 
-  fit('should_return_filtered_items_based_on_the_search_term', () => {
-    const items = [
-      { id: 1, name: 'Apple', category: 'Fruit' },
-      { id: 2, name: 'Banana', category: 'Fruit' },
-      { id: 3, name: 'Carrot', category: 'Vegetable' }
-    ];
-    const searchTerm = 'apple';
-    const result = (pipe as any).transform(items, searchTerm);
-    expect(result).toEqual([{ id: 1, name: 'Apple', category: 'Fruit' }]);
-  });
- 
-});
- 
+    <button type="submit">Submit</button>
+</form>
+
  
