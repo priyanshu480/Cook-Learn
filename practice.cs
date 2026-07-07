@@ -1,238 +1,180 @@
-contact-form.component.ts
-import { Component } from '@angular/core';
+form.component.ts
+import { Component, OnInit } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
-  Validators,
-  AbstractControl,
-  ValidationErrors
+  Validators
 } from '@angular/forms';
  
 @Component({
-  selector: 'app-contact-form',
-  templateUrl: './contact-form.component.html',
-  styleUrls: ['./contact-form.component.css']
+  selector: 'app-form',
+  templateUrl: './form.component.html',
+  styleUrls: ['./form.component.css']
 })
-export class ContactFormComponent {
+export class FormComponent implements OnInit {
  
-  contactForm: FormGroup;
+  form!: FormGroup;
  
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder) { }
  
-    this.contactForm = this.fb.group({
-      firstName: ['', [Validators.required, Validators.minLength(2)]],
-      lastName: ['', [Validators.required, Validators.minLength(2)]],
+  ngOnInit(): void {
+ 
+    this.form = this.fb.group({
+      firstName: ['', Validators.required],
+      lastName: ['', Validators.required],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', Validators.required],
+      phonenumber: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
- 
-    address: this.fb.group({
-        street: [''],
-        city: [''],
-        state: [''],
-        postalCode: ['']
-      }),
- 
-    subjectDetails: this.fb.group(
-        {
-          subject: [''],
-          message: ['']
-        },
-        {
-          validators: this.subjectMessageValidator
-        }
-      )
+      age: ['', [Validators.required, Validators.min(18)]]
     });
   }
  
-  subjectMessageValidator(
-    group: AbstractControl
-  ): ValidationErrors | null {
- 
-    const subject = group.get('subject')?.value;
-    const message = group.get('message')?.value;
- 
-    if ((subject && !message) || (!subject && message)) {
-      return { subjectMessageRequired: true };
-    }
- 
-    return null;
+  get f() {
+    return this.form.controls;
   }
  
   onSubmit(): void {
  
-    if (this.contactForm.valid) {
- 
-    console.log(this.contactForm.value);
- 
-    this.contactForm.reset();
- 
-    } else {
- 
-    console.log('Form Invalid');
- 
-    this.contactForm.markAllAsTouched();
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
     }
-  }
  
-  get firstName() {
-    return this.contactForm.get('firstName');
-  }
+    if (this.form.value.password !== this.form.value.confirmPassword) {
+      return;
+    }
  
-  get lastName() {
-    return this.contactForm.get('lastName');
-  }
- 
-  get email() {
-    return this.contactForm.get('email');
+    alert('Form submitted successfully!');
   }
 }
  
  
-contact-form.component.html
+form.component.html
  
+<h2>Reactive Form</h2>
  
-<h1>Contact Form</h1>
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
  
-<form
-  [formGroup]="contactForm"
-  (ngSubmit)="onSubmit()">
+  <label for="firstName">First Name</label>
+  <input
+    type="text"
+    id="firstName"
+    formControlName="firstName">
  
-<div>
-    <label>First Name</label>
+<div *ngIf="f['firstName'].touched && f['firstName'].errors?.['required']">
+    First Name is required
+  </div>
  
-    `<input
-      type="text"
-      formControlName="firstName">`
+  <label for="lastName">Last Name</label>
+  <input
+    type="text"
+    id="lastName"
+    formControlName="lastName">
  
-    <div
-      *ngIf="firstName?.touched && firstName?.errors?.['required']">
-      First Name is required`</div>`
+<div *ngIf="f['lastName'].touched && f['lastName'].errors?.['required']">
+    Last Name is required
+  </div>
  
-    <div
-      *ngIf="firstName?.touched && firstName?.errors?.['minlength']">
-      Minimum 2 characters required`</div>`
+  <label for="password">Password</label>
+  <input
+    type="password"
+    id="password"
+    formControlName="password">
  
-</div>
+<div *ngIf="f['password'].touched && f['password'].errors?.['required']">
+    Password is required
+  </div>
  
-<br>
+<div *ngIf="f['password'].touched && f['password'].errors?.['minlength']">
+    Minimum length is 6
+  </div>
  
-<div>
-    <label>Last Name</label>
+  <label for="confirmPassword">Confirm Password</label>
+  <input
+    type="password"
+    id="confirmPassword"
+    formControlName="confirmPassword">
  
-    `<input
-      type="text"
-      formControlName="lastName">`
+<div *ngIf="f['confirmPassword'].touched && f['confirmPassword'].errors?.['required']">
+    Confirm Password is required
+  </div>
  
-    <div
-      *ngIf="lastName?.touched && lastName?.errors?.['required']">
-      Last Name is required`</div>`
+<div *ngIf="form.value.password !== form.value.confirmPassword
+              && form.value.confirmPassword">
+    Passwords do not match
+  </div>
  
-    <div
-      *ngIf="lastName?.touched && lastName?.errors?.['minlength']">
-      Minimum 2 characters required`</div>`
+  <label for="phonenumber">Phone number</label>
+  <input
+    type="text"
+    id="phonenumber"
+    formControlName="phonenumber">
  
-</div>
+<div *ngIf="f['phonenumber'].touched && f['phonenumber'].errors?.['required']">
+    Phone number is required
+  </div>
  
-<br>
+  <label for="email">Email</label>
+  <input
+    type="email"
+    id="email"
+    formControlName="email">
  
-<div>
-    <label>Email</label>
+<div *ngIf="f['email'].touched && f['email'].errors?.['required']">
+    Email is required
+  </div>
  
-    `<input
-      type="email"
-      formControlName="email">`
+<div *ngIf="f['email'].touched && f['email'].errors?.['email']">
+    Invalid email format
+  </div>
  
-    <div
-      *ngIf="email?.touched && email?.errors?.['required']">
-      Email is required`</div>`
+  <label for="age">Age</label>
+  <input
+    type="number"
+    id="age"
+    formControlName="age">
  
-    <div
-      *ngIf="email?.touched && email?.errors?.['email']">
-      Invalid email format`</div>`
+<div *ngIf="f['age'].touched && f['age'].errors?.['required']">
+    Age is required
+  </div>
  
-</div>
+<div *ngIf="f['age'].touched && f['age'].errors?.['min']">
+    Age must be at least 18
+  </div>
  
-<br>
- 
-<div formGroupName="address">
- 
-    `<h3>`Address`</h3>`
- 
-    `<input
-      type="text"
-      formControlName="street"
-      placeholder="Street">`
- 
-    `<input
-      type="text"
-      formControlName="city"
-      placeholder="City">`
- 
-    `<input
-      type="text"
-      formControlName="state"
-      placeholder="State">`
- 
-    `<input
-      type="text"
-      formControlName="postalCode"
-      placeholder="Postal Code">`
- 
-</div>
- 
-<br>
- 
-<div formGroupName="subjectDetails">
- 
-    `<h3>`Subject Details`</h3>`
- 
-    `<input
-      type="text"
-      formControlName="subject"
-      placeholder="Subject">`
- 
-    `<textarea
-      formControlName="message"
-      placeholder="Message"></textarea>`
- 
-    <div
-      *ngIf="contactForm.get('subjectDetails')?.errors?.['subjectMessageRequired']">
-      Subject and Message must both be filled.`</div>`
- 
-</div>
- 
-<br>
- 
-  <button
-    type="submit"
-    [disabled]="contactForm.invalid">
+<button type="submit" [disabled]="form.invalid">
     Submit
-  `</button>`
+  </button>
  
 </form>
  
  
+ 
 app.module.ts
+ 
  
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
  
 import { AppComponent } from './app.component';
-import { ContactFormComponent } from './contact-form/contact-form.component';
+import { FormComponent } from './form/form.component';
  
 @NgModule({
   declarations: [
     AppComponent,
-    ContactFormComponent
+    FormComponent
   ],
   imports: [
     BrowserModule,
     ReactiveFormsModule
   ],
+  providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
  
  
-app.comonent.html
-<app-contact-form></app-contact-form>
+app.component.html
+<app-form></app-form>
