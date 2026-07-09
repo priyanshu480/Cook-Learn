@@ -1,1546 +1,499 @@
-9 July
-Session 1 cod 1
+dotnetapp:-
 
-auth.guard.ts
+models:
 
+course model:-
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
-import { Injectable } from '@angular/core';
-import {
-  CanActivate,
-  Router
-} from '@angular/router';
-
-import { AuthService } from '../services/auth.service';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthGuard implements CanActivate {
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) { }
-
-  canActivate(): boolean {
-
-    if (this.authService.isAuthenticated()) {
-      return true;
-    }
-
-    this.router.navigate(['/error']);
-    return false;
-  }
-}
-
-adminpage.component.ts
-
-
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from 'src/app/services/auth.service';
-
-@Component({
-  selector: 'app-adminpage',
-  templateUrl: './adminpage.component.html',
-  styleUrls: ['./adminpage.component.css']
-})
-export class AdminpageComponent {
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) { }
-
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
-
-}
-
-adminpage.component.html
-
-<h1>Admin Page</h1>
-
-<button (click)="logout()">
-  Logout
-</button>
-
-error.component.ts
-
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-error',
-  templateUrl: './error.component.html',
-  styleUrls: ['./error.component.css']
-})
-export class ErrorComponent {
-
-}
-
-error.component.html
-
-<h1>Unauthorized Access</h1>*
-<p>You are not authorized to view*this page.</p>
-
-<a routerLink="/lo*in">
-  Go to Login
-</a>
-
-login.component.ts
-
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-
-import { AuthService } from 'src/app/services/auth.service';
-import { Login } from 'src/app/models/login.model';
-
-@Component({
-  selector: 'app-login',
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
-})
-export class LoginComponent {
-
-  loginData: Login = {
-    username: '',
-    password: ''
-  };
-
-  errorMessage = '';
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) { }
-
-  login(): void {
-
-    this.authService.login(this.loginData)
-      .subscribe(res => {
-
-    if (res) {
-
-    localStorage.setItem(
-            'isLoggedIn',
-            'true'
-          );
-
-    this.router.navigate(['/admin']);
-
-    } else {
-
-    this.errorMessage =
-            'Invalid username or password';
-        }
-
-    });
-  }
-}
-
-login.component.html
-
-
-
-<h1>Login</h1>
-
-<input
-  type="text"
-  [(ngModel)]="loginData.username"
-  placeholder="Username">
-
-<input
-  type="password"
-  [(ngModel)]="loginData.password"
-  placeholder="Password">
-
-<button (click)="login()">
-  Login
-</button>
-
-<p *ngIf="errorMessage" style="color:red">
-  {{ errorMessage }}
-</p>
-
-
-
-models/login.model.ts
-
-export interface Login {
-    username: string;
-    password: string;
-  }
-  
-auth/auth.service.ts
-
-
-
-import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { Login } from '../models/login.model';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthService {
-
-  constructor() { }
-
-  login(loginData: Login): Observable<boolean> {
-
-    if (
-      loginData.username === 'admin' &&
-      loginData.password === 'password'
-    ) {
-      return of(true);
-    }
-
-    return of(false);
-  }
-
-  isAuthenticated(): boolean {
-    return localStorage.getItem('isLoggedIn') === 'true';
-  }
-
-  logout(): void {
-    localStorage.removeItem('isLoggedIn');
-  }
-}
-
-app.module.ts
-
-
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
-
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-
-import { LoginComponent } from './components/login/login.component';
-import { AdminpageComponent } from './components/adminpage/adminpage.component';
-import { ErrorComponent } from './components/error/error.component';
-
-@NgModule({
-  declarations: [
-    AppComponent,
-    LoginComponent,
-    AdminpageComponent,
-    ErrorComponent
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    FormsModule,
-    HttpClientModule
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
-
-app.component.ts
-
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
-})
-export class AppComponent {
-  title = 'angularapp';
-}
-
-
-app-routing.module.ts
-
-
-import { NgModule } from '@angular/core';
-import {
-
-RouterModule,
-  Routes
-  } from '@angular/router';
-
-import { LoginComponent } from './components/login/login.component';
-import { AdminpageComponent } from './components/adminpage/adminpage.component';
-import { ErrorComponent } from './components/error/error.component';
-import { AuthGuard } from './authguard/auth.guard';
-
-const routes: Routes = [
-
-  {
-    path: '',
-    redirectTo: 'login',
-    pathMatch: 'full'
-  },
-
-  {
-    path: 'login',
-    component: LoginComponent
-  },
-
-  {
-    path: 'admin',
-    component: AdminpageComponent,
-    canActivate: [AuthGuard]
-  },
-
-  {
-    path: 'error',
-    component: ErrorComponent
-  },
-
-  {
-    path: '**',
-    redirectTo: 'login'
-  }
-
-];
-
-@NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
-})
-export class AppRoutingModule { }
-
-
-=================
-
-9 July Session 1 Cod 2
-
-auth.guard.ts
-
-
-
-import { Injectable } from '@angular/core';
-import {
-  CanActivate,
-  Router
-} from '@angular/router';
-
-import { AuthService } from '../services/auth.service';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthGuard implements CanActivate {
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) { }
-
-  canActivate(): boolean {
-
-    if (this.authService.isAuthenticated()) {
-      return true;
-    }
-
-    this.router.navigate(['/error']);
-    return false;
-  }
-}
-
-
-error.component.html
-
-<h1>Unauthorized Access</h1>
-
-<p>
-  You are not authorized to view this page.
-</p>
-
-<a routerLink="/login">
-  Go to Login
-</a>
-
-error.component.ts
-
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-error',
-  templateUrl: './error.component.html',
-  styleUrls: ['./error.component.css']
-})
-export class ErrorComponent {
-
-}
-
-login.component.ts
-
-
-
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-import { Login } from '../../models/login.model';
-
-@Component({
-  selector: 'app-login',
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
-})
-export class LoginComponent {
-
-  loginData: Login = {
-    username: '',
-    password: ''
-  };
-
-  errorMessage = '';
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) { }
-
-  login(): void {
-
-    this.authService
-      .login(this.loginData)
-      .subscribe((res: any) => {
-
-    if (res) {
-
-    localStorage.setItem(
-            'isLoggedIn',
-            'true'
-          );
-
-    this.router.navigate(['/user']);
-
-    } else {
-
-    this.errorMessage =
-            'Invalid username or password';
-        }
-      });
-  }
-}
-
-
-login.component.html
-
-
-
-
-
-<h1>Login</h1>
-
-<input
-  type="text"
-  [(ngModel)]="loginData.username"
-  placeholder="Username">
-
-<input
-  type="password"
-  [(ngModel)]="loginData.password"
-  placeholder="Password">
-
-<button (click)="login()">
-  Login
-`</button>`
-
-<p *ngIf="errorMessage" style="color:red">
-  {{ errorMessage }}
-</p>
-
-
-
-userpage.component.ts
-
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-
-@Component({
-  selector: 'app-userpage',
-  templateUrl: './userpage.component.html',
-  styleUrls: ['./userpage.component.css']
-})
-export class UserpageComponent {
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) { }
-
-  logout(): void {
-
-    this.authService.logout();
-
-    this.router.navigate(['/login']);
-  }
-}
-
-
-userpage.component.html
-
-<h1>Welcome User!</h1>
-
-<button (click)="logout()">
-  Logout
-`</button>`
-
-models/login.model.ts
-
-export interface Login {
-    username: string;
-    password: string;
-  }
-  
-services/auth.service.ts
-
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Login } from '../models/login.model';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthService {
-
-  apiUrl =
-    'https://8080--premiumproject.examly.io/api/login';
-
-  constructor(private http: HttpClient) { }
-
-  login(loginData: Login): Observable<any> {
-    return this.http.post<any>(
-      this.apiUrl,
-      loginData
-    );
-  }
-
-  isAuthenticated(): boolean {
-    return localStorage.getItem('isLoggedIn') === 'true';
-  }
-
-  logout(): void {
-    localStorage.removeItem('isLoggedIn');
-  }
-}
-
-app-routing.module.ts
-
-import { NgModule } from '@angular/core';
-import {
-  RouterModule,
-  Routes
-} from '@angular/router';
-
-import { LoginComponent } from './components/login/login.component';
-import { UserpageComponent } from './components/userpage/userpage.component';
-import { ErrorComponent } from './components/error/error.component';
-import { AuthGuard } from './authguard/auth.guard';
-
-const routes: Routes = [
-
-  {
-    path: '',
-    redirectTo: 'login',
-    pathMatch: 'full'
-  },
-
-  {
-    path: 'login',
-    component: LoginComponent
-  },
-
-  {
-    path: 'user',
-    component: UserpageComponent,
-    canActivate: [AuthGuard]
-  },
-
-  {
-    path: 'error',
-    component: ErrorComponent
-  },
-
-  {
-    path: '**',
-    redirectTo: 'login'
-  }
-
-];
-
-@NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
-})
-export class AppRoutingModule { }
-
-app.component.ts
-
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
-})
-export class AppComponent {
-  title = 'angularapp';
-}
-
-
-app.module.ts
-
-
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
-
-import { AppComponent } from './app.component';
-import { AppRoutingModule } from './app-routing.module';
-
-import { LoginComponent } from './components/login/login.component';
-import { UserpageComponent } from './components/userpage/userpage.component';
-import { ErrorComponent } from './components/error/error.component';
-
-@NgModule({
-  declarations: [
-    AppComponent,
-    LoginComponent,
-    UserpageComponent,
-    ErrorComponent
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    FormsModule,      // IMPORTANT
-    HttpClientModule  // IMPORTANT
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
-
-=================
-
-
-9 July
-Session 2 Cod 1
-
-authguard/auth.guard.ts
-
-import { Injectable } from '@angular/core';
-import {
-  CanActivate,
-  Router
-} from '@angular/router';
-
-import { AuthService } from '../../services/auth.service';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthGuard implements CanActivate {
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) { }
-
-  canActivate(): boolean {
-
-    if (this.authService.isLoggedIn()) {
-      return true;
-    }
-
-    this.router.navigate(['/login']);
-    return false;
-  }
-}
-
-components/dashboard/dashboard.component.ts
-
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-
-@Component({
-  selector: 'app-dashboard',
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
-})
-export class DashboardComponent {
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) { }
-
-  logout(): void {
-
-    this.authService.logout();
-
-    this.router.navigate(['/login']);
-  }
-}
-
-
-dashboard.component.html
-
-
-
-<h1>Dashboard</h1>
-
-<p>Token stored successfully</p>
-
-<button (click)="logout()">
-  Logout
-`</button>`
-
-login.component.ts
-
-
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-
-@Component({
-  selector: 'app-login',
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
-})
-export class LoginComponent {
-
-  username = '';
-  password = '';
-  errorMessage = '';
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) { }
-
-  login(): void {
-
-    this.authService
-      .login(this.username, this.password)
-      .subscribe(
-        (res: any) => {
-
-    const token =
-            res.token || 'sample-token';
-
-    this.authService.storeToken(token);
-
-    this.router.navigate(['/dashboard']);
-        },
-        () => {
-          this.errorMessage =
-            'Invalid username or password';
-        }
-      );
-  }
-}
-
-
-login.component.html
-
-<p>login works!</p>
-
-
-<h1>Login</h1>
-
-<input
-  type="text"
-  [(ngModel)]="username"
-  placeholder="Username">
-
-<input
-  type="password"
-  [(ngModel)]="password"
-  placeholder="Password">
-
-<button (click)="login()">
-  Login
-`</button>`
-
-<p *ngIf="errorMessage">
-  {{ errorMessage }}
-</p>
-
-
-models/login.model.ts
-
-export class Login {
-    username: string = '';
-    password: string = '';
-  }
-  
-services/auth.service.ts
-
-
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { JwtService } from './jwt.service';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthService {
-
-  private apiUrl =
-    'https://8080--premiumproject.examly.io/api/login';
-
-  constructor(
-    private http: HttpClient,
-    private jwtService: JwtService
-  ) { }
-
-  login(
-    username: string,
-    password: string
-  ): Observable<any> {
-
-    return this.http.post<any>(
-      this.apiUrl,
-      {
-        username: username,
-        password: password
-      }
-    );
-  }
-
-  storeToken(token: string): void {
-    this.jwtService.saveToken(token);
-  }
-
-  logout(): void {
-    this.jwtService.destroyToken();
-  }
-
-  isLoggedIn(): boolean {
-    return this.jwtService.isLoggedIn();
-  }
-}
-
-
-services/jwt.service.ts
-
-import { Injectable } from '@angular/core';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class JwtService {
-
-  constructor() { }
-
-  saveToken(token: string): void {
-    localStorage.setItem('jwt_token', token);
-  }
-
-  getToken(): string | null {
-    return localStorage.getItem('jwt_token');
-  }
-
-  destroyToken(): void {
-    localStorage.removeItem('jwt_token');
-  }
-
-  isLoggedIn(): boolean {
-    return !!this.getToken();
-  }
-}
-
-app-routing.module.ts
-
-import { NgModule } from '@angular/core';
-import {
-  RouterModule,
-  Routes
-} from '@angular/router';
-
-import { LoginComponent } from './components/login/login.component';
-import { DashboardComponent } from './components/dashboard/dashboard.component';
-import { AuthGuard } from './components/authguard/auth.guard';
-
-const routes: Routes = [
-
-  {
-    path: '',
-    redirectTo: 'login',
-    pathMatch: 'full'
-  },
-
-  {
-    path: 'login',
-    component: LoginComponent
-  },
-
-  {
-    path: 'dashboard',
-    component: DashboardComponent,
-    canActivate: [AuthGuard]
-  },
-
-  {
-    path: '**',
-    redirectTo: 'login'
-  }
-
-];
-
-@NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
-})
-export class AppRoutingModule { }
-
-
-app.component.html
-
-
-
-<router-outlet></router-outlet>
-
-
-app.component.ts
-
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
-})
-export class AppComponent {
-  title = 'angularapp';
-}
-
-
-app.module.ts
-
-
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
-
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-
-import { LoginComponent } from './components/login/login.component';
-import { DashboardComponent } from './components/dashboard/dashboard.component';
-
-@NgModule({
-  declarations: [
-    AppComponent,
-    LoginComponent,
-    DashboardComponent
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    FormsModule,
-    HttpClientModule
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
-
-
-=================================
-
-Session 2 Cod 2
-
-src/app/services/jwt.service.ts
-
-import { Injectable } from '@angular/core';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class JwtService {
-
-  saveToken(token: string): void {
-    localStorage.setItem('jwt_token', token);
-  }
-
-  getToken(): string | null {
-    return localStorage.getItem('jwt_token');
-  }
-
-  destroyToken(): void {
-    localStorage.removeItem('jwt_token');
-  }
-
-  isLoggedIn(): boolean {
-    return !!this.getToken();
-  }
-}
-
-src/app/services/auth.service.ts
-
-import { Injectable } from '@angular/core';
-import { JwtService } from './jwt.service';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthService {
-
-  constructor(private jwtService: JwtService) {}
-
-  storeToken(token: string): void {
-    this.jwtService.saveToken(token);
-  }
-
-  logout(): void {
-    this.jwtService.destroyToken();
-  }
-
-  isLoggedIn(): boolean {
-    return this.jwtService.isLoggedIn();
-  }
-
-  login(username: string, password: string): any {
-    return {
-      subscribe: (fn: any) => fn({ token: 'token' })
-    };
-  }
-}
-
-src/app/components/authguard/auth.guard.ts
-
-import { Injectable } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthGuard {
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-
-  canActivate(): boolean {
-
-    if (this.authService.isLoggedIn()) {
-      return true;
-    }
-
-    this.router.navigate(['/login']);
-    return false;
-  }
-}
-
-src/app/components/login/login.component.ts
-
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-
-@Component({
-  selector: 'app-login',
-  templateUrl: './login.component.html'
-})
-export class LoginComponent {
-
-  username = '';
-  password = '';
-  errorMessage = '';
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-
-  login(): void {
-
-    this.authService
-      .login(this.username, this.password)
-      .subscribe((res: any) => {
-
-        this.authService.storeToken(res.token);
-        this.router.navigate(['/profile']);
-
-      });
-  }
-}
-
-src/app/components/login/login.component.html
-
-<input [(ngModel)]="username">
-<input [(ngModel)]="password">
-<button (click)="login()">Login</button>
-
-src/app/components/profile/profile.component.ts
-
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-
-@Component({
-  selector: 'app-profile',
-  templateUrl: './profile.component.html'
-})
-export class ProfileComponent {
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
-}
-
-src/app/components/profile/profile.component.html
-
-<button (click)="logout()">Logout</button>
-
-src/app/app.module.ts
-
-import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-
-import { AppComponent } from './app.component';
-import { LoginComponent } from './components/login/login.component';
-import { ProfileComponent } from './components/profile/profile.component';
-
-@NgModule({
-  declarations: [
-    AppComponent,
-    LoginComponent,
-    ProfileComponent
-  ],
-  imports: [
-    BrowserModule,
-    FormsModule
-  ],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
-
-src/app/app.component.html
-
-Empty file
-
-================================
-
-session 3 cod 1
-
-auth.service.ts
-
-
-
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { tap } from 'rxjs/operators';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthService {
-
-  public apiUrl = 'https://8080---premiumproject.examly.io/api/login';
-
-  constructor(private http: HttpClient) {}
-
-  login(username: string, password: string) {
-
-    return this.http.post<any>(this.apiUrl, {
-      username,
-      password
-    }).pipe(
-      tap((res: any) => {
-        if (res && res.token) {
-          localStorage.setItem('token', res.token);
-        }
-      })
-    );
-  }
-
-  logout(): void {
-    localStorage.removeItem('token');
-  }
-}
-
-
-auth.interceptor.ts
-
-
-import { Injectable } from '@angular/core';
-import {
-  HttpInterceptor,
-  HttpRequest,
-  HttpHandler
-} from '@angular/common/http';
-
-@Injectable()
-export class AuthInterceptor implements HttpInterceptor {
-
-  intercept(req: HttpRequest<any>, next: HttpHandler) {
-
-    const token = localStorage.getItem('token');
-
-    if (token) {
-      req = req.clone({
-        setHeaders: {
-          Authorization:`Bearer ${token}`
-        }
-      });
-    }
-
-    return next.handle(req);
-  }
-}
-
-login.component.ts
-
-
-
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-
-@Component({
-  selector: 'app-login',
-  templateUrl: './login.component.html'
-})
-export class LoginComponent {
-
-  username = '';
-  password = '';
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-
-  login(): void {
-
-    this.authService
-      .login(this.username, this.password)
-      .subscribe(() => {
-
-    this.router.navigate(['/dashboard']);
-
-    });
-
-  }
-
-}
-
-
-login.component.html
-
-
-<button (click)="login()">Login `</button>`
-
-dashboard.component.ts
-
-
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-
-@Component({
-  selector: 'app-dashboard',
-  templateUrl: './dashboard.component.html'
-})
-export class DashboardComponent {
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-
-  logout(): void {
-
-    this.authService.logout();
-    this.router.navigate(['/login']);
-
-  }
-
-}
-
-
-dashboard.component.html
-
-<button (click)="logout()">Logout `</button>`
-
-app.module.ts
-
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-
-import { AppComponent } from './app.component';
-import { LoginComponent } from './components/login/login.component';
-import { DashboardComponent } from './components/dashboard/dashboard.component';
-
-@NgModule({
-  declarations: [
-    AppComponent,
-    LoginComponent,
-    DashboardComponent
-  ],
-  imports: [
-    BrowserModule
-  ],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
-
-
-app.component.ts
-
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
-})
-export class AppComponent {
-  title = 'angularapp';
-}
-
-
-app.component.html
-
-<p></p>
-
-======================
-
-Session 3 cod 2
-
-login.component.ts
-
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-
-@Component({
-  selector: 'app-login',
-  templateUrl: './login.component.html'
-})
-export class LoginComponent {
-
-  username = '';
-  password = '';
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-
-  login(): void {
-
-    this.authService
-      .login(this.username, this.password)
-      .subscribe(() => {
-
-    this.router.navigate(['/profile']);
-
-    });
-  }
-
-}
-
-
-login.component.html
-
-
-<button (click)="login()">Login `</button>`
-
-profile.component.ts
-
-
-import { Component } from '@angular/core';
-import { AuthService } from '../../services/auth.service';
-
-@Component({
-  selector: 'app-profile',
-  templateUrl: './profile.component.html'
-})
-export class ProfileComponent {
-
-  profileData: any;
-
-  constructor(private authService: AuthService) {}
-
-  loadProfile(): void {
-
-    this.authService
-      .getProfile()
-      .subscribe(data => {
-
-    this.profileData = data;
-
-    });
-  }
-
-}
-
-
-profile.component.html
-
-<button (click)="loadProfile()">Load `</button>`
-
-
-interceptors
-
-import { Injectable } from '@angular/core';
-import {
-  HttpInterceptor,
-  HttpRequest,
-  HttpHandler,
-  HttpEvent,
-  HttpResponse
-} from '@angular/common/http';
-
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
-
-@Injectable()
-export class LoggingInterceptor implements HttpInterceptor {
-
-  intercept(
-    req: HttpRequest<any>,
-    next: HttpHandler
-  ): Observable<HttpEvent<any>> {
-
-    console.log('Request URL:', req.url);
-    console.log('Request Method:', req.method);
-
-    return next.handle(req).pipe(
-      tap((event: any) => {
-        if (event instanceof HttpResponse) {
-          console.log('Response Status:', event.status);
-        }
-      })
-    );
-  }
-}
-
-auth.service.ts
-
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthService {
-
-  apiUrl = 'https://8080---premiumproject.examly.io/api';
-
-  constructor(private http: HttpClient) {}
-
-  login(username: string, password: string) {
-    return this.http.post(`${this.apiUrl}/login`, {
-      username,
-      password
-    });
-  }
-
-  getProfile() {
-    return this.http.get(`${this.apiUrl}/profile`);
-  }
-
-}
-
-app.component.html
-
-<p></p>
-
-
-app.component.ts
-
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
-})
-export class AppComponent {
-  title = 'angularapp';
-}
-
-
-app.module.ts
-
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-
-import { AppComponent } from './app.component';
-import { LoginComponent } from './components/login/login.component';
-import { ProfileComponent } from './components/profile/profile.component';
-import { LoggingInterceptor } from './interceptors/logging.interceptor';
-
-@NgModule({
-  declarations: [
-    AppComponent,
-    LoginComponent,
-    ProfileComponent
-  ],
-  imports: [
-    BrowserModule,
-    HttpClientModule
-  ],
-  providers: [
+namespace dotnetapp.Models
+{
+    public class Course
     {
-      provide: HTTP_INTERCEPTORS,
-      useClass: LoggingInterceptor,
-      multi: true
+        public int CourseId {get;set;}
+
+        public string Title {get;set;}
+
+        public string Description {get;set;}
+
+        public int Duration {get;set;}
+    
+        public int? InstructorId {get;set;}
+
+        [JsonIgnore]
+        public Instructor? Instructor {get;set;}
+
     }
-  ],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
+}
+
+---------------
+
+instructor:-
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+
+namespace dotnetapp.Models
+{
+    public class Instructor
+    {
+        public int InstructorId{get;set;}
+
+        public string Name{get;set;}
+
+        public string Email {get;set;}
+
+        public DateTime HireDate {get;set;}
+
+        [JsonIgnore]
+        public ICollection<Course> Courses{get;set;} = new List<Course>();
+    }
+}
+
+------------------
+
+ApplicationDbContext:-
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+
+namespace dotnetapp.Models
+{
+    public class ApplicationDbContext : DbContext
+    {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options): base(options){
+
+        }
+
+        public DbSet<Course> Courses{get;set;}
+
+        public DbSet<Instructor> Instructors {get;set;}
+
+        public DbSet<User> Users {get;set;}
+
+        protected override void OnModelCreating(ModelBuilder m)
+        {
+            
+            m.Entity<Instructor>()
+            .HasMany(s=>s.Courses)
+            .WithOne(c=>c.Instructor)
+            .HasForeignKey(fk=>fk.InstructorId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        }
+
+        
+    }
+}
+
+---------------------
+
+User:-
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace dotnetapp.Models
+{
+    public class User
+    {
+        public long Id {get;set;}
+
+        public string Username {get;set;}
+
+        public string Password {get;set;}
+
+        public string Role {get;set;}
+    }
+}
+
+--------------------
+LoginModel:-
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace dotnetapp.Models
+{
+    public class LoginModel
+    {
+        public string Username {get;set;}
+
+        public string Password{get;set;}
+    }
+}
+
+------------------------------
+
+Controller:-
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using dotnetapp.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace dotnetapp.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class CourseController : ControllerBase
+    {
+        private readonly ApplicationDbContext db;
+
+        public CourseController(ApplicationDbContext db1)
+        {
+            db = db1;
+        }
+
+        [HttpGet("GetCourses")]
+        public async Task<ActionResult<IEnumerable<Course>>> GetCourses()
+        {
+
+            try
+            {
+                var res = await db.Courses.Include(i => i.Instructor).ToListAsync();
+
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("PostCourse")]
+        public async Task<ActionResult<Course>> PostCourse(Course course)
+        {
+            try
+            {
+                db.Courses.Add(course);
+                await db.SaveChangesAsync();
+                return CreatedAtAction(nameof(GetCourses), new {id = course.CourseId}, course);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("PutCourse/{id}")]
+        public async Task<IActionResult> PutCourse(int id, Course course)
+        {
+            if (id != course.CourseId)
+            {
+                return BadRequest(new { message = "Course ID mismatch." });
+            }
+
+            var existing = await db.Courses.FindAsync(id);
+
+            if (existing == null)
+            {
+                return NotFound(new { message = "Course not found." });
+            }
+
+            try
+            {
+                existing.Title = course.Title;
+                existing.Description = course.Description;
+                existing.Duration = course.Duration;
+                existing.InstructorId = course.InstructorId;
+
+                await db.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("DeleteCourse/{id}")]
+        public async Task<IActionResult> DeleteCourse(int id)
+        {
+
+            try
+            {
+                var course = await db.Courses.FindAsync(id);
+
+                if( course == null){
+                    return NotFound(new {message = "Course not found."});
+                }
+
+                db.Courses.Remove(course);
+                await db.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+    }
+}
 
 
+---------------------
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using dotnetapp.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace dotnetapp.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class InstructorController : ControllerBase
+    {
+        public ApplicationDbContext db;
+
+        public InstructorController(ApplicationDbContext db1)
+        {
+            db = db1;
+        }
+
+        [HttpGet("GetInstructors")]
+        public async Task<ActionResult<IEnumerable<Instructor>>> GetInstructors()
+        {
+
+            try
+            {
+                var res = await db.Instructors.Include(i => i.Courses).ToListAsync();
+
+                return res;
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("PostInstructor")]
+        public async Task<ActionResult<Instructor>> PostInstructor(Instructor instructor)
+        {
+            try
+            {
+                db.Instructors.Add(instructor);
+                await db.SaveChangesAsync();
+                return CreatedAtAction(nameof(GetInstructors), new {id = instructor.InstructorId} ,instructor);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("PutInstructor/{id}")]
+        public async Task<IActionResult> PutInstructor(int id, Instructor instructor)
+        {
+            if (id != instructor.InstructorId)
+            {
+                return BadRequest(new { message = "Instructor ID mismatch." });
+            }
+
+            var existing = await db.Instructors.FindAsync(id);
+
+            if (existing == null)
+            {
+                return NotFound(new { message = "Instructor not found." });
+            }
+
+            try
+            {
+                existing.Name = instructor.Name;
+                existing.Email = instructor.Email;
+                existing.HireDate = instructor.HireDate;
+
+                await db.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("DeleteInstructor/{id}")]
+        public async Task<IActionResult> DeleteInstructor(int id)
+        {
+
+            try
+            {
+                var instructor = await db.Instructors.Include(i => i.Courses).FirstOrDefaultAsync(i=> i.InstructorId==id);
+
+                if( instructor == null){
+                    return NotFound(new {message = "Instructor not found."});
+                }
+
+                if(instructor.Courses != null && instructor.Courses.Any()){
+                    return Conflict( new {message = "Cannot delete instructor with associated courses."});
+                }
+
+                db.Instructors.Remove(instructor);
+                await db.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+    }
+}
 
 
+------------------------------
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using dotnetapp.Models;
+using Microsoft.AspNetCore.Mvc;
+
+namespace dotnetapp.Controllers
+{
+    [ApiController]
+    [Route("api/users")]
+    public class UserController : ControllerBase
+    {
+        private readonly ApplicationDbContext db;
+
+        private readonly string[] validRoles = {
+            "Admin",
+            "Organizer"
+        };
+
+        public UserController(ApplicationDbContext db1){
+            db = db1;
+        }
+
+        [HttpPost("register")]
+        public async Task<ActionResult<User>> Register(User user){
+
+            if( !IsValidRole(user.Role)){
+                return BadRequest("Ivalid role provided.");
+            }
+
+            bool usernameExists = db.Users.Any(u=> u.Username == user.Username);
+
+            if(usernameExists){
+                return Conflict("Username already exists");
+            }
+
+            db.Users.Add(user);
+            await db.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(Register), new {id = user.Id}, user);
+
+        }
+
+        [HttpPost("login")]
+        public async Task<ActionResult<object>> Login(LoginModel user){
+            var existingUser = db.Users.FirstOrDefault(u => 
+                u.Username == user.Username &&
+                u.Password == user.Password );
+
+            if(existingUser == null){
+                return BadRequest(new {
+                    message = "Login failed."
+                });
+            }
+
+            return Ok(new{
+                message = "Login successfull",
+                user = existingUser
+            });
+        }
+
+        private bool IsValidRole(string role){
+            return validRoles.Contains(role);
+        }
+    }
+}
 
 
+------------------------------
+
+Program.cs
+
+using Microsoft.EntityFrameworkCore;
+using dotnetapp.Models;
+using Microsoft.AspNetCore.Authentication;
 
 
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Add services to the container.
+
+builder.Services.AddControllers().AddJsonOptions(options => {options.JsonSerializerOptions.PropertyNamingPolicy = null;});
+
+//builder.Services.AddAuthentication("Basic Authentication").AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic Authentication" , null);
+builder.Services.AddAuthorization();
+
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
 
 
+-------------------------------
 
+appsetting.json
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "User ID=sa;password=examlyMssql@123;Server=localhost;Database=appdb;trusted_connection=false;persist security info=false;encrypt=false"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*"
+}
 
 
