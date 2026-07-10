@@ -1,84 +1,63 @@
-===========================================================================================================
+admincom.css
 
-Models Folder:----------------------------------------------------
+.admin-container {
+    width: 90%;
+    margin: 30px auto;
+    padding: 30px;
+  }
 
-============================================================================================================
-
-Course.model.ts---------------
-
-
-import { Instructor } from './instructor.model';
-export interface Course {
-  CourseId?: number;
-  Title: string;
-  Description: string;
-  Duration: number;
-  InstructorId?: number | null;
-  Instructor?: Instructor;
-}
-
-
-
-Login.model.ts---------------
-
-export interface LoginModel {
-    Username?: string;
-    Password?: string;
+  h1 {
+    text-align: center;
+    font-size: 42px;
+    margin-bottom: 40px;
   }
 
 
-Instructor.model.ts----------------
+html
 
-import { Course } from './course.model';
-export interface Instructor {
-  InstructorId?: number;
-  Name: string;
-  Email: string;
-  HireDate: Date | string;
-  Courses?: Course[];
-}
+<div class="admin-container">
 
+    <h1>Admin Panel</h1>
+    <app-instructor [instructors]="instructors" [editedInstructor]="editedInstructor"
+        (editInstructorEvent)="editInstructor($event)" (saveEditedInstructorEvent)="saveEditedInstructor()"
+        (cancelEditInstructorEvent)="cancelEditInstructor()" (deleteInstructorEvent)="deleteInstructor($event)">
+    </app-instructor>
 
-User.model.ts----------------
+    <app-course [courses]="courses" [editedCourse]="editedCourse" (editCourseEvent)="editCourse($event)"
+        (saveEditedCourseEvent)="saveEditedCourse()" (cancelEditCourseEvent)="cancelEditCourse()"
+        (deleteCourseEvent)="deleteCourse($event)"></app-course>
 
-export interface User {
-    Id?: number;
-    Username?: string;
-    Password?: string;
-    Role?: string;
-  }
+</div>
 
 
-
-
-
-===========================================================================================================
-
-App's Components----------------------------------------------------
-
-============================================================================================================
-
-=======================================
-admin.ts-------------------------------
+ts
 
 
 import { Component, OnInit } from '@angular/core';
-import { CourseService } from '../services/course.service';
-import { InstructorService } from '../services/instructor.service';
-import { Course } from '../../models/course.model';
+
 import { Instructor } from '../../models/instructor.model';
+import { Course } from '../../models/course.model';
+
+import { InstructorService } from '../services/instructor.service';
+import { CourseService } from '../services/course.service';
 
 @Component({
   selector: 'app-admin',
-  templateUrl: './admin.component.html'
+  templateUrl: './admin.component.html',
+  styleUrls: ['./admin.component.css']
 })
 export class AdminComponent implements OnInit {
-  courses: Course[] = [];
-  instructors: Instructor[] = [];
-  editedCourse: Course | null = null;
-  editedInstructor: Instructor | null = null;
 
-  constructor(private courseService: CourseService, private instructorService: InstructorService) {}
+  instructors: Instructor[] = [];
+  courses: Course[] = [];
+
+  editedInstructor: Instructor | null = null;
+  editedCourse: Course | null = null;
+
+  constructor(
+    private instructorService: InstructorService,
+    private courseService: CourseService
+  ) { }
 
   ngOnInit(): void {
     this.getInstructors();
@@ -86,19 +65,33 @@ export class AdminComponent implements OnInit {
   }
 
   getInstructors(): void {
-    this.instructorService.getInstructors().subscribe(data => this.instructors = data);
+    this.instructorService.getInstructors().subscribe({
+      next: (data) => {
+        this.instructors = data;
+      },
+      error: (error) => {
+        console.log(error);
+      }
+    });
   }
 
   editInstructor(instructor: Instructor): void {
     this.editedInstructor = { ...instructor };
   }
 
-  saveEditedInstructor(instructor: Instructor): void {
-    if (instructor.InstructorId) {
-      this.instructorService.updateInstructor(instructor.InstructorId, instructor).subscribe(() => {
-        this.getInstructors();
-        this.editedInstructor = null;
-      });
+  saveEditedInstructor(): void {
+    if (this.editedInstructor && this.editedInstructor.InstructorId) {
+      this.instructorService
+        .updateInstructor(this.editedInstructor.InstructorId, this.editedInstructor)
+        .subscribe({
+          next: () => {
+            this.getInstructors();
+            this.editedInstructor = null;
+          },
+          error: (error) => {
+            console.log(error);
+          }
+        });
     }
   }
 
@@ -107,23 +100,44 @@ export class AdminComponent implements OnInit {
   }
 
   deleteInstructor(instructorId: number): void {
-    this.instructorService.deleteInstructor(instructorId).subscribe(() => this.getInstructors());
+    this.instructorService.deleteInstructor(instructorId).subscribe({
+      next: () => {
+        this.getInstructors();
+      },
+      error: (error) => {
+        console.log(error);
+      }
+    });
   }
 
   getCourses(): void {
-    this.courseService.getCourses().subscribe(data => this.courses = data);
+    this.courseService.getCourses().subscribe({
+      next: (data) => {
+        this.courses = data;
+      },
+      error: (error) => {
+        console.log(error);
+      }
+    });
   }
 
   editCourse(course: Course): void {
     this.editedCourse = { ...course };
   }
 
-  saveEditedCourse(course: Course): void {
-    if (course.CourseId) {
-      this.courseService.updateCourse(course.CourseId, course).subscribe(() => {
-        this.getCourses();
-        this.editedCourse = null;
-      });
+  saveEditedCourse(): void {
+    if (this.editedCourse && this.editedCourse.CourseId) {
+      this.courseService
+        .updateCourse(this.editedCourse.CourseId, this.editedCourse)
+        .subscribe({
+          next: () => {
+            this.getCourses();
+            this.editedCourse = null;
+          },
+          error: (error) => {
+            console.log(error);
+          }
+        });
     }
   }
 
@@ -132,99 +146,457 @@ export class AdminComponent implements OnInit {
   }
 
   deleteCourse(courseId: number): void {
-    this.courseService.deleteCourse(courseId).subscribe(() => this.getCourses());
+    this.courseService.deleteCourse(courseId).subscribe({
+      next: () => {
+        this.getCourses();
+      },
+      error: (error) => {
+        console.log(error);
+      }
+    });
   }
+
 }
 
 
-
-
-admin.html---------------------------------------------
-
-
-<div class="admin-container">
-  <h2>Admin Panel</h2>
-
-  <app-instructor
-    [instructors]="instructors"
-    [editedInstructor]="editedInstructor"
-    (editInstructorEvent)="editInstructor($event)"
-    (saveEditedInstructorEvent)="saveEditedInstructor($event)"
-    (cancelEditInstructorEvent)="cancelEditInstructor()"
-    (deleteInstructorEvent)="deleteInstructor($event)">
-  </app-instructor>
-
-  <app-course
-    [courses]="courses"
-    [editedCourse]="editedCourse"
-    (editCourseEvent)="editCourse($event)"
-    (saveEditedCourseEvent)="saveEditedCourse($event)"
-    (cancelEditCourseEvent)="cancelEditCourse()"
-    (deleteCourseEvent)="deleteCourse($event)">
-  </app-course>
-
-</div>
-
-
-admin.css:---------------------------------------------
-
-.admin-container { padding: 30px; }
-
-
-
-=======================================
-
-make auth guard this=ngs
-
-auth.guard.ts
-============================================
+authguard
 
 import { Injectable } from '@angular/core';
-import { CanActivate, ActivatedRouteSnapshot, Router } from '@angular/router';
+import {
+  CanActivate,
+  ActivatedRouteSnapshot,
+  Router,
+  RouterStateSnapshot
+} from '@angular/router';
+
 import { AuthService } from '../services/auth.service';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class AuthGuard implements CanActivate {
-  constructor(private authService: AuthService, private router: Router) {}
 
-  canActivate(route: ActivatedRouteSnapshot): boolean {
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) { }
+
+  canActivate(
+    route: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot
+  ): boolean {
+
     if (!this.authService.isLoggedIn()) {
       this.router.navigate(['/login']);
       return false;
     }
 
-    const requiredRole = route.data['role'];
-    if (requiredRole === 'Admin' && !this.authService.isAdmin()) {
+    if (state.url.includes('/admin') && !this.authService.isAdmin()) {
       this.router.navigate(['/error']);
       return false;
     }
-    if (requiredRole === 'Organizer' && !this.authService.isOrganizer()) {
+
+    if (state.url.includes('/organizer') && !this.authService.isOrganizer()) {
       this.router.navigate(['/error']);
       return false;
     }
 
     return true;
   }
+
 }
 
 
-====================================================================
-course.comp.ts:
+
+course css
 
 
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+
+form {
+    width: 700px;
+    margin: 30px auto;
+}
+
+h1 {
+    text-align: center;
+    color: #0d6efd;
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input,
+textarea {
+    width: 100%;
+    padding: 10px;
+}
+
+textarea {
+    height: 100px;
+}
+
+.error-message {
+    color: red;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+#status {
+    margin-top: 15px;
+    color: green;
+    font-weight: bold;
+    text-align: center;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 15px;
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+}
+
+
+
+
+
+
+
+html
+
+
+
+<form #courseForm="ngForm" (ngSubmit)="createCourse()">
+
+    <h1>CREATE NEW COURSE</h1>
+    
+      <label>Course Title</label>
+    
+      <input type="text" id="courseTitle" name="courseTitle" [(ngModel)]="newCourse.Title" required
+        #courseTitleRef="ngModel" (input)="lastField = 'courseTitle'">
+    
+      <label>Description</label>
+    
+    <textarea id="courseDescription" name="courseDescription" [(ngModel)]="newCourse.Description" required
+        #courseDescriptionRef="ngModel" (input)="lastField = 'courseDescription'">
+        </textarea>
+    
+      <label>Duration</label>
+    
+      <input type="number" id="courseDuration" name="courseDuration" [(ngModel)]="newCourse.Duration" required
+        #courseDurationRef="ngModel" (input)="lastField = 'courseDuration'">
+    
+    <div class="error-message">
+        {{ getCourseErrorMessage() }}
+      </div>
+    
+    <div id="status">
+        Duration Status: {{ durationStatus }}
+      </div>
+    
+    <button type="submit" id="submit" [disabled]="courseForm.invalid">
+        CREATE
+      </button>
+    
+    </form>
+
+
+ts
+
+
+
+import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+
+import { CourseService } from '../../services/course.service';
+import { Course } from '../../../models/course.model';
+
+@Component({
+  selector: 'app-create-course',
+  templateUrl: './create-course.component.html',
+  styleUrls: ['./create-course.component.css']
+})
+export class CreateCourseComponent {
+
+  newCourse: Course = {
+    Title: '',
+    Description: '',
+    Duration: 0,
+    InstructorId: null
+  };
+
+  errorMessage: string = '';
+  lastField: string = '';
+
+  constructor(
+    private courseService: CourseService,
+    private router: Router
+  ) { }
+
+  createCourse(): void {
+    this.errorMessage = '';
+
+    this.courseService.createCourse(this.newCourse).subscribe({
+      next: () => {
+        this.router.navigate(['/admin']);
+      },
+      error: () => {
+        this.errorMessage = 'Course not added';
+      }
+    });
+  }
+
+  get durationStatus(): string {
+    if (!this.newCourse.Duration) {
+      return 'Undefined';
+    }
+
+    if (this.newCourse.Duration < 10) {
+      return 'Short Duration';
+    }
+
+    if (this.newCourse.Duration >= 10 && this.newCourse.Duration <= 30) {
+      return 'Moderate Duration';
+    }
+
+    return 'Long Duration';
+  }
+
+  getCourseErrorMessage(): string {
+    if (this.lastField === 'courseDescription' && this.newCourse.Description === '') {
+      return 'Description is required';
+    }
+
+    if (this.lastField === 'courseTitle' && this.newCourse.Title === '') {
+      return 'Course Title is required';
+    }
+
+    if (this.lastField === 'courseDuration' && !this.newCourse.Duration) {
+      return 'Duration is required';
+    }
+
+    return '';
+  }
+
+}
+
+courseee css
+
+
+.course-section {
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
+
+h2 {
+    font-size: 34px;
+    margin-bottom: 20px;
+    color: #333333;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 0 12px lightgray;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 40px;
+}
+
+thead {
+    background-color: #0d85f2;
+    color: white;
+}
+
+th,
+td {
+    padding: 18px;
+    text-align: left;
+    font-size: 18px;
+}
+
+th {
+    font-weight: bold;
+}
+
+.edit-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    margin-right: 8px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.edit-card {
+    width: 650px;
+    margin: 40px auto;
+    padding: 35px;
+    box-shadow: 0 0 15px lightgray;
+    border-radius: 10px;
+}
+
+.edit-card h2 {
+    text-align: center;
+    color: #333333;
+    margin-bottom: 25px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 8px;
+    font-size: 18px;
+}
+
+input,
+textarea {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+textarea {
+    height: 90px;
+}
+
+.duration-status {
+    width: 400px;
+    margin: 30px auto;
+    padding: 20px;
+    box-shadow: 0 0 12px lightgray;
+    border-radius: 8px;
+    font-size: 18px;
+}
+
+.button-group {
+    margin-top: 25px;
+}
+
+.save-btn {
+    background-color: #0d85f2;
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    margin-right: 8px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.cancel-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+
+html
+
+
+<div class="course-section">
+
+    <h2>Course List</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>TITLE</th>
+                <th>DESCRIPTION</th>
+                <th>DURATION</th>
+                <th>ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let course of courses">
+                <td>{{ course.Title }}</td>
+                <td>{{ course.Description }}</td>
+                <td>{{ course.Duration }} days</td>
+                <td>
+                    <button class="edit-btn" (click)="onEditCourse(course)">
+                        Edit
+                    </button>
+
+    <button class="delete-btn" (click)="onDeleteCourse(course.CourseId || 0)">
+                        Delete</button>
+                </td>
+            </tr>
+        </tbody>
+
+    </table>
+    <div class="edit-card" *ngIf="editedCourse">
+
+    <h2>Edit Course</h2>
+
+    <label>Title:</label>
+        <input type="text" [(ngModel)]="editedCourse.Title">
+
+    <label>Description:</label>
+        <textarea [(ngModel)]="editedCourse.Description">
+        </textarea>
+
+    <label>Duration:</label>
+        <input type="number" [(ngModel)]="editedCourse.Duration">
+
+    <div class="duration-status">
+            Duration Status: {{ getDurationStatus(editedCourse.Duration) }}
+        </div>
+
+    <div class="button-group">
+            <button class="save-btn" (click)="onSaveEditedCourse()">
+                Save
+            </button>
+
+    <button class="cancel-btn" (click)="onCancelEditCourse()">
+                Cancel</button>
+        </div>
+
+    </div>
+
+</div>
+
+
+ts
+
+
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Course } from '../../models/course.model';
 
 @Component({
   selector: 'app-course',
-  templateUrl: './course.component.html'
+  templateUrl: './course.component.html',
+  styleUrls: ['./course.component.css']
 })
 export class CourseComponent {
+
   @Input() courses: Course[] = [];
   @Input() editedCourse: Course | null = null;
 
   @Output() editCourseEvent = new EventEmitter<Course>();
-  @Output() saveEditedCourseEvent = new EventEmitter<Course>();
+  @Output() saveEditedCourseEvent = new EventEmitter<void>();
   @Output() cancelEditCourseEvent = new EventEmitter<void>();
   @Output() deleteCourseEvent = new EventEmitter<number>();
 
@@ -233,9 +605,7 @@ export class CourseComponent {
   }
 
   onSaveEditedCourse(): void {
-    if (this.editedCourse) {
-      this.saveEditedCourseEvent.emit(this.editedCourse);
-    }
+    this.saveEditedCourseEvent.emit();
   }
 
   onCancelEditCourse(): void {
@@ -245,242 +615,517 @@ export class CourseComponent {
   onDeleteCourse(courseId: number): void {
     this.deleteCourseEvent.emit(courseId);
   }
-}
 
+  getDurationStatus(duration: number): string {
+    if (duration < 10) {
+      return 'Short Duration';
+    }
 
+    if (duration >= 10 && duration <= 30) {
+      return 'Moderate Duration';
+    }
 
-
-course.comp.html;-----------------------------------
-
-
-<div class="course-list">
-  <h3>Course List</h3>
-  <table>
-    <tr>
-      <th>Title</th>
-      <th>Description</th>
-      <th>Duration</th>
-      <th>Actions</th>
-    </tr>
-    <tr *ngFor="let course of courses">
-      <td>{{course.Title}}</td>
-      <td>{{course.Description}}</td>
-      <td>{{course.Duration}} days</td>
-      <td>
-        <button class="edit-btn" (click)="onEditCourse(course)">Edit</button>
-        <button class="delete-btn" (click)="onDeleteCourse(course.CourseId!)">Delete</button>
-      </td>
-    </tr>
-  </table>
-
-<div *ngIf="editedCourse" class="edit-form">
-    <h3>Edit Course</h3>
-    <label>Title:</label>
-    <input type="text" [(ngModel)]="editedCourse.Title">
-
-    <label>Description:</label>
-    <textarea [(ngModel)]="editedCourse.Description"></textarea>
-
-    <label>Duration (in days):</label>
-    <input type="number" [(ngModel)]="editedCourse.Duration">
-
-    <button (click)="onSaveEditedCourse()">Save</button>
-    <button (click)="onCancelEditCourse()">Cancel</button>
-
-</div>
-</div>
-
-
-
-course.csss----------------------------------------------------
-
-.course-container { padding: 20px; }
-
-
-==================================================================
-
-====================================================================
-
-create-course.comp.ts:------------------------------------------
-
-
-import { Component } from '@angular/core';
-import { CourseService } from '../../services/course.service';
-import { Router } from '@angular/router';
-import { Course } from '../../../models/course.model';
-
-@Component({
-  selector: 'app-create-course',
-  templateUrl: './create-course.component.html'
-})
-export class CreateCourseComponent {
-  newCourse: Course = { Title: '', Description: '', Duration: 0 };
-
- 
-  tDirty = false;
-  dDirty = false;
-  durDirty = false;
-
-  get durationStatus(): string {
-    if (!this.newCourse.Duration || this.newCourse.Duration === 0) return 'Undefined';
-    if (this.newCourse.Duration < 10) return 'Short Duration';
-    if (this.newCourse.Duration >= 10 && this.newCourse.Duration <= 30) return 'Moderate Duration';
     return 'Long Duration';
   }
 
-  constructor(private courseService: CourseService, private router: Router) {}
-
-  createCourse(): void {
-    this.courseService.createCourse(this.newCourse).subscribe(() => {
-      this.newCourse = { Title: '', Description: '', Duration: 0 };
-      this.router.navigate(['/admin']);
-    });
-  }
 }
 
 
 
+error css
 
-create-course.comp.html:------------------------------------------
+.error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+}
 
-<div class="create-course-container">
-  <h2>CREATE NEW COURSE</h2>
-  <form #courseForm="ngForm" (ngSubmit)="courseForm.valid && createCourse()">
-    <label>Course Title *</label>
-    <input type="text" id="courseTitle" name="courseTitle" [(ngModel)]="newCourse.Title" required minlength="2"
-      maxlength="100" #titleInp (input)="tDirty=true">
-    <div class="error-message" *ngIf="tDirty && titleInp.value === ''">Course Title is required</div>
+.error-card {
+    text-align: center;
+    padding: 40px;
+    box-shadow: 0 0 15px lightgray;
+    border-radius: 10px;
+    width: 500px;
+}
 
-    <label>Description *</label>
-    <textarea id="courseDescription" name="courseDescription" [(ngModel)]="newCourse.Description" required #descInp
-      (input)="dDirty=true"></textarea>
-    <div class="error-message" *ngIf="dDirty && descInp.value === ''">Description is required</div>
+.error-card h1 {
+    font-size: 70px;
+    color: #dc3545;
+    margin-bottom: 10px;
+}
 
-    <label>Duration (in days) *</label>
-    <input type="number" id="courseDuration" name="courseDuration" [(ngModel)]="newCourse.Duration" required #durInp
-      (input)="durDirty=true">
-    <div class="error-message" *ngIf="durDirty && durInp.value === ''">Duration is required</div>
+.error-card h2 {
+    margin-bottom: 15px;
+}
 
-    <div id="status">Duration Status: {{ durationStatus }}</div>
+.error-card p {
+    margin-bottom: 20px;
+}
 
-    <button type="submit" id="submit" [disabled]="courseForm.invalid">CREATE</button>
+.error-card a {
+    text-decoration: none;
+    background-color: #0d85f2;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+}
 
-  </form>
-</div>
 
-
-
-creatcourse-css------------------------------------------------
-
-.form-container {
-    max-width: 600px; margin: 40px auto; padding: 30px;
-    background: #fff; border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  }
-  .title { color: #1e90ff; text-align: center; font-weight: bold; }
-  label { display: block; margin-top: 15px; color: #333; }
-  .required { color: red; }
-  input, textarea {
-    width: 100%; padding: 10px; margin-top: 6px;
-    border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;
-  }
-  textarea { min-height: 100px; resize: vertical; }
-  .error-message { color: #e74c3c; font-style: italic; margin-top: 4px; font-size: 14px; }
-  .duration-status { color: #28a745; text-align: center; margin: 15px 0; }
-  button {
-    width: 100%; padding: 12px;
-    background-color: #1e90ff; color: white; border: none;
-    border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;
-  }
-  button:disabled { background-color: #a0c8f0; cursor: not-allowed; }
-  
+html
 
 
 
-===========================================================================================
-============================================================================================
+<div class="error-container">
 
-error.comp.ts:---------------------
+    <div class="error-card">
+    
+        <h1>404</h1>
+    
+        <h2>Page Not Found</h2>
+    
+        <p>
+          The page you are looking for does not exist.
+        </p>
+    
+        <a routerLink="/">
+          Go to Home
+        </a>
+    
+    </div>
+    
+    </div>
+
+
+
+
+ts
 
 
 import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-error',
-  templateUrl: './error.component.html'
+  templateUrl: './error.component.html',
+  styleUrls: ['./error.component.css']
 })
-export class ErrorComponent { }
+export class ErrorComponent {
+
+}
 
 
 
-error.comp.html:---------------------
+home css
 
 
-<div class="error-container">
-  <h2>Oops! Something went wrong.</h2>
+.home-container {
+    min-height: 500px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 90px;
+    font-family: Georgia, serif;
+}
+
+.welcome-card {
+    width: 720px;
+    padding: 45px 55px;
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0 0 16px lightgray;
+    background-color: white;
+}
+
+.welcome-card h1 {
+    color: #0d85f2;
+    font-size: 34px;
+    line-height: 1.3;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.welcome-card p {
+    color: #555555;
+    font-size: 18px;
+    line-height: 1.8;
+}
+
+
+html
+
+
+
+
+<div class="home-container">
+
+    <div class="welcome-card">
+
+    <h1>
+            WELCOME TO THE COURSE-INSTRUCTOR MANAGEMENT SYSTEM
+        </h1>
+
+    <p>
+            This is the home page of our Course-Instructor Management System.
+            Use the navigation menu to manage instructors, courses, and their
+            assignments efficiently.
+        </p>
+
+    </div>
+
 </div>
 
 
-erro.comp.css-----------------------------
-
-.error-container { text-align: center; padding: 50px; color: #e74c3c; }
 
 
 
+ts
 
-===========================================================================================
-============================================================================================
-
-
-home com ts----------------------
 
 import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-home',
-  templateUrl: './home.component.html'
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.css']
 })
-export class HomeComponent { }
+export class HomeComponent {
+
+}
 
 
 
-home comp html--------------------
+create-ins
 
-<div class="home-container">
-  <h2>WELCOME TO THE COURSE-INSTRUCTOR MANAGEMENT SYSTEM</h2>
-  <p>This is the home page of our Course-Instructor Management System. Use the navigation menu to manage instructors, courses, and their assignments efficiently.</p>
+css
+
+
+
+form {
+    width: 700px;
+    margin: 40px auto;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 0 15px lightgray;
+}
+
+h1 {
+    text-align: center;
+    color: #0d6efd;
+    font-size: 38px;
+    margin-bottom: 30px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    font-size: 18px;
+    margin-top: 15px;
+    margin-bottom: 8px;
+}
+
+input {
+    width: 100%;
+    height: 42px;
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+}
+
+.error-message {
+    color: red;
+    margin-top: 8px;
+    margin-bottom: 12px;
+    font-style: italic;
+}
+
+button {
+    width: 100%;
+    height: 45px;
+    margin-top: 20px;
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 18px;
+}
+
+button:disabled {
+    background-color: #cccccc;
+}
+
+
+
+
+
+
+html
+
+
+<form #instructorForm="ngForm" (ngSubmit)="createInstructor()">
+
+    <h1>CREATE NEW INSTRUCTOR</h1>
+
+    <label for="instructorName">
+        Instructor Name
+    </label>
+
+    <input type="text" id="instructorName" name="instructorName" [(ngModel)]="newInstructor.Name" required
+        #instructorNameRef="ngModel">
+
+    <div class="error-message" *ngIf="instructorNameRef.invalid && instructorNameRef.touched">
+        Instructor Name is required</div>
+
+    <label for="email">
+        Email
+    </label>
+
+    <input type="email" id="email" name="email" [(ngModel)]="newInstructor.Email" required #emailRef="ngModel">
+
+    <div class="error-message" *ngIf="emailRef.invalid && emailRef.touched">
+        Email is required</div>
+
+    <label for="hireDate">
+        Hire Date
+    </label>
+
+    <input type="date" id="hireDate" name="hireDate" [(ngModel)]="newInstructor.HireDate" required
+        #hireDateRef="ngModel">
+
+    <div class="error-message" *ngIf="hireDateRef.invalid && hireDateRef.touched">
+        Hire Date is required</div>
+
+    <div class="error-message" *ngIf="errorMessage">
+        {{ errorMessage }}</div>
+
+    <button type="submit" id="submit" [disabled]="instructorForm.invalid">
+        CREATE</button>
+
+</form>
+
+
+ts
+
+
+import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+
+import { InstructorService } from '../../services/instructor.service';
+import { Instructor } from '../../../models/instructor.model';
+
+@Component({
+  selector: 'app-create-instructor',
+  templateUrl: './create-instructor.component.html',
+  styleUrls: ['./create-instructor.component.css']
+})
+export class CreateInstructorComponent {
+
+  newInstructor: Instructor = {
+    Name: '',
+    Email: '',
+    HireDate: ''
+  };
+
+  errorMessage: string = '';
+
+  constructor(
+    private instructorService: InstructorService,
+    private router: Router
+  ) { }
+
+  createInstructor(): void {
+    this.errorMessage = '';
+
+    this.instructorService.createInstructor(this.newInstructor).subscribe({
+      next: () => {
+        this.router.navigate(['/admin']);
+      },
+      error: (error) => {
+        console.log('Create Instructor Error:', error);
+        this.errorMessage = 'Instructor not added';
+      }
+    });
+  }
+
+}
+
+
+ins css
+
+
+.section {
+    margin-bottom: 50px;
+}
+
+h2 {
+    font-size: 30px;
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 0 12px lightgray;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+thead {
+    background-color: #0d85f2;
+    color: white;
+}
+
+th,
+td {
+    padding: 18px;
+    text-align: center;
+    font-size: 18px;
+}
+
+.edit-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    margin-right: 8px;
+    border-radius: 5px;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 5px;
+}
+
+.edit-card {
+    width: 500px;
+    margin: 40px auto;
+    padding: 30px;
+    box-shadow: 0 0 15px lightgray;
+    border-radius: 10px;
+}
+
+.edit-card h2 {
+    text-align: center;
+    color: #0d85f2;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 8px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+}
+
+.button-group {
+    margin-top: 25px;
+}
+
+.save-btn {
+    background-color: #0d85f2;
+    color: white;
+    border: none;
+    padding: 12px 22px;
+    margin-right: 8px;
+    border-radius: 5px;
+}
+
+.cancel-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 5px;
+}
+
+
+
+html
+
+
+<div class="section">
+
+    <h2>Instructor List</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Instructor Name</th>
+                <th>Email</th>
+                <th>Hire Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let instructor of instructors">
+                <td>{{ instructor.Name }}</td>
+                <td>{{ instructor.Email }}</td>
+                <td>{{ instructor.HireDate }}</td>
+                <td>
+                    <button class="edit-btn" (click)="onEditInstructor(instructor)">
+                        Edit
+                    </button>
+
+    <button class="delete-btn" (click)="onDeleteInstructor(instructor.InstructorId || 0)">
+                        Delete</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="edit-card" *ngIf="editedInstructor">
+
+    <h2>Edit Instructor</h2>
+
+    <label>Instructor Name:</label>
+        <input type="text" [(ngModel)]="editedInstructor.Name">
+
+    <label>Email:</label>
+        <input type="email" [(ngModel)]="editedInstructor.Email">
+
+    <label>Hire Date:</label>
+        <input type="date" [(ngModel)]="editedInstructor.HireDate">
+
+    <div class="button-group">
+            <button class="save-btn" (click)="onSaveEditedInstructor()">
+                Save
+            </button>
+
+    <button class="cancel-btn" (click)="onCancelEditInstructor()">
+                Cancel</button>
+        </div>
+
+    </div>
+
 </div>
 
 
-
-hom csss-----------------------------
-
-.home-container { text-align: center; padding: 50px; }
+ts
 
 
 
-
-===========================================================================================
-============================================================================================
-
-
-instruct.comp.ts_______________________
-
-
-
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Instructor } from '../../models/instructor.model';
 
 @Component({
   selector: 'app-instructor',
-  templateUrl: './instructor.component.html'
+  templateUrl: './instructor.component.html',
+  styleUrls: ['./instructor.component.css']
 })
 export class InstructorComponent {
+
   @Input() instructors: Instructor[] = [];
   @Input() editedInstructor: Instructor | null = null;
 
   @Output() editInstructorEvent = new EventEmitter<Instructor>();
-  @Output() saveEditedInstructorEvent = new EventEmitter<Instructor>();
+  @Output() saveEditedInstructorEvent = new EventEmitter<void>();
   @Output() cancelEditInstructorEvent = new EventEmitter<void>();
   @Output() deleteInstructorEvent = new EventEmitter<number>();
 
@@ -489,9 +1134,7 @@ export class InstructorComponent {
   }
 
   onSaveEditedInstructor(): void {
-    if (this.editedInstructor) {
-      this.saveEditedInstructorEvent.emit(this.editedInstructor);
-    }
+    this.saveEditedInstructorEvent.emit();
   }
 
   onCancelEditInstructor(): void {
@@ -502,338 +1145,500 @@ export class InstructorComponent {
     this.deleteInstructorEvent.emit(instructorId);
   }
 
-  onHireDateChange(date: string): void {
-    if (this.editedInstructor) {
-      this.editedInstructor.HireDate = date;
-    }
-  }
 }
 
 
 
-instruct.comp.html-_______________________
+login css
+
+.error-message {
+    color: red;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+form {
+    width: 500px;
+    margin: auto;
+}
+
+input,
+button {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px;
+}
 
 
-<div class="instructor-list">
-  <h3>Instructor List</h3>
-  <table>
-    <tr>
-      <th>Instructor Name</th>
-      <th>Email</th>
-      <th>Hire Date</th>
-      <th>Actions</th>
-    </tr>
-    <tr *ngFor="let inst of instructors">
-      <td>{{inst.Name}}</td>
-      <td>{{inst.Email}}</td>
-      <td>{{inst.HireDate | date}}</td>
-      <td>
-        <button class="edit-btn" (click)="onEditInstructor(inst)">Edit</button>
-        <button class="delete-btn" (click)="onDeleteInstructor(inst.InstructorId!)">Delete</button>
-      </td>
-    </tr>
-  </table>
+html
 
-<div *ngIf="editedInstructor" class="edit-form">
-    <h3>Edit Instructor</h3>
-    <label>Instructor Name:</label>
-    <input type="text" [(ngModel)]="editedInstructor.Name">
+<form #loginForm="ngForm" (ngSubmit)="login()">
 
-    <label>Email:</label>
-    <input type="text" [(ngModel)]="editedInstructor.Email">
-
-    <label>Hire Date:</label>
-    <input type="date" [ngModel]="editedInstructor.HireDate | date:'yyyy-MM-dd'" (ngModelChange)="onHireDateChange($event)">
-
-    <button (click)="onSaveEditedInstructor()">Save</button>
-    <button (click)="onCancelEditInstructor()">Cancel</button>
-
-</div>
-</div>
+    <h1>Login</h1>
+    
+      <label>Username</label>
+    
+      <input type="text" id="username" name="username" [(ngModel)]="username" required #usernameRef="ngModel"
+        (input)="lastField = 'username'">
+    
+      <label>Password</label>
+    
+      <input type="password" id="password" name="password" [(ngModel)]="password" required #passwordRef="ngModel"
+        (input)="lastField = 'password'">
+    
+    <div class="error-message">
+        {{ getLoginErrorMessage() }}
+      </div>
+    
+    <button id="submit" type="submit" [disabled]="loginForm.invalid">
+        Login
+      </button>
+    
+    </form>
 
 
 
-instructor.css--------------------------------------
+ts
 
-
-.instructor-container { padding: 20px; }
-
-
-
-===========================================================================================
-============================================================================================
-
-
-create-instructor.cmp.ts----------------
 
 
 import { Component } from '@angular/core';
-import { InstructorService } from '../../services/instructor.service';
 import { Router } from '@angular/router';
-import { Instructor } from '../../../models/instructor.model';
 
-@Component({
-  selector: 'app-create-instructor',
-  templateUrl: './create-instructor.component.html'
-})
-export class CreateInstructorComponent {
-  newInstructor: Instructor = { Name: '', Email: '', HireDate: '' };
-
-  constructor(private instructorService: InstructorService, private router: Router) {}
-
-  createInstructor(): void {
-    this.instructorService.createInstructor(this.newInstructor).subscribe(() => {
-      this.newInstructor = { Name: '', Email: '', HireDate: '' };
-      this.router.navigate(['/admin']);
-    });
-  }
-}
-
-
-create-instructor.cmp.html ----------------
-
-
-<div class="create-instructor-container">
-  <h2>CREATE NEW INSTRUCTOR</h2>
-  <form #instructorForm="ngForm" (ngSubmit)="instructorForm.valid && createInstructor()">
-
-    <label>Instructor Name *</label>
-    <input type="text" id="instructorName" name="instructorName" [(ngModel)]="newInstructor.Name" required minlength="2" maxlength="100" #iName="ngModel">
-    <div class="error-message" *ngIf="iName.invalid && (iName.dirty || iName.touched)">
-      Instructor Name is required
-    </div>
-
-    <label>Email *</label>
-    <input type="email" id="email" name="email" [(ngModel)]="newInstructor.Email" required email #iEmail="ngModel">
-    <div class="error-message" *ngIf="iEmail.invalid && (iEmail.dirty || iEmail.touched)">
-      Email is required
-    </div>
-
-    <label>Hire Date *</label>
-    <input type="date" id="hireDate" name="hireDate" [(ngModel)]="newInstructor.HireDate" required #iDate="ngModel">
-    <div class="error-message" *ngIf="iDate.invalid && (iDate.dirty || iDate.touched)">
-      Hire Date is required
-    </div>
-
-    <button type="submit" id="submit" [disabled]="instructorForm.invalid">CREATE</button>
-
-</form>
-</div>
-
-
-
-create-instructor.css-------------------------------
-
-
-.form-container {
-    max-width: 600px; margin: 40px auto; padding: 30px;
-    background: #fff; border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  }
-  .title { color: #1e90ff; text-align: center; font-weight: bold; }
-  label { display: block; margin-top: 15px; color: #333; }
-  .required { color: red; }
-  input {
-    width: 100%; padding: 10px; margin-top: 6px;
-    border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;
-  }
-  .error-message { color: #e74c3c; font-style: italic; margin-top: 4px; font-size: 14px; }
-  button {
-    width: 100%; padding: 12px; margin-top: 25px;
-    background-color: #1e90ff; color: white; border: none;
-    border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;
-  }
-  button:disabled { background-color: #a0c8f0; cursor: not-allowed; }
-  
-
-
-===========================================================================================
-============================================================================================
-
-
-
-login.comp.ts_______________________
-
-import { Component } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-import { Router } from '@angular/router';
 import { LoginModel } from '../../models/login-model.model';
 
 @Component({
   selector: 'app-login',
-  templateUrl: './login.component.html'
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  loginModel: LoginModel = { Username: '', Password: '' };
 
-  
-  uDirty = false;
-  pDirty = false;
+  username: string = '';
+  password: string = '';
+  errorMessage: string = '';
+  lastField: string = '';
 
-  private routeUserBasedOnRole(): void {
-    if (this.authService.isAdmin()) {
-      this.router.navigate(['/admin']);
-    } else if (this.authService.isOrganizer()) {
-      this.router.navigate(['/organizer']);
-    }
-  }
-
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) { }
 
   login(): void {
-    this.authService.login(this.loginModel).subscribe({
-      next: () => this.routeUserBasedOnRole(),
-      error: (err) => console.error(err)
+    this.errorMessage = '';
+
+    const loginData: LoginModel = {
+      Username: this.username,
+      Password: this.password
+    };
+
+    this.authService.login(loginData).subscribe({
+      next: (response) => {
+        const loggedInUser = response.user || response.User;
+
+    if (!loggedInUser) {
+          this.errorMessage = 'Invalid username or password';
+          return;
+        }
+
+    const userRole = loggedInUser.Role || loggedInUser.role;
+
+    if (userRole === 'Admin') {
+          this.router.navigate(['/admin']);
+        } else if (userRole === 'Organizer') {
+          this.router.navigate(['/organizer']);
+        } else {
+          this.router.navigate(['/home']);
+        }
+      },
+      error: () => {
+        this.errorMessage = 'Invalid username or password';
+      }
     });
   }
+
+  getLoginErrorMessage(): string {
+    if (this.lastField === 'password' && this.password === '') {
+      return 'Password is required';
+    }
+
+    if (this.lastField === 'username' && this.username === '') {
+      return 'Username is required';
+    }
+
+    return '';
+  }
+
 }
 
 
-
-========================================================================
-
-login.comp.html_______________
+nav bar css
 
 
-<div class="login-container">
-  <h2>Login</h2>
-  <form #loginForm="ngForm" (ngSubmit)="loginForm.valid && login()">
+.navbar {
+    background-color: #0d85f2;
+    color: white;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 130px;
+    padding-right: 130px;
+}
 
-    <label>Username*</label>
-    <input type="text" id="username" name="username" [(ngModel)]="loginModel.Username" required #userInp (input)="uDirty=true">
-    <div class="error-message" *ngIf="uDirty && userInp.value === ''">Username is required</div>
+.navbar-title {
+    font-size: 28px;
+    font-weight: bold;
+    font-family: Georgia, serif;
+}
 
-    <label>Password*</label>
-    <input type="password" id="password" name="password" [(ngModel)]="loginModel.Password" required #passInp (input)="pDirty=true">
-    <div class="error-message" *ngIf="pDirty && passInp.value === ''">Password is required</div>
+.navbar-links {
+    display: flex;
+    align-items: center;
+    gap: 35px;
+}
 
-    <button type="submit" id="submit" [disabled]="loginForm.invalid">Login</button>
+.navbar-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: bold;
+    font-family: Georgia, serif;
+}
 
-</form>
-</div>
-
-
-
-
-login.css__________________________
-
-
-.form-container {
-    max-width: 500px; margin: 40px auto; padding: 30px;
-    background: #fff; border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  }
-  .title { color: #1e90ff; font-weight: bold; }
-  label { display: block; margin-top: 15px; color: #333; }
-  .required { color: red; }
-  input {
-    width: 100%; padding: 10px; margin-top: 6px;
-    border: 1px solid #e74c3c; border-radius: 4px; box-sizing: border-box;
-  }
-  .error-message { color: #e74c3c; font-style: italic; margin-top: 4px; font-size: 14px; }
-  button {
-    padding: 10px 24px; margin-top: 20px;
-    background-color: #1e90ff; color: white; border: none;
-    border-radius: 4px; font-size: 16px; cursor: pointer;
-  }
-  button:disabled { background-color: #a0c8f0; cursor: not-allowed; }
-  
+.navbar-links a:hover {
+    text-decoration: underline;
+}
 
 
-
-===========================================================================================
-============================================================================================
+html
 
 
+<nav class="navbar">
 
-navbar.comp.ts____________________________________________
+    <div class="navbar-title">
+        Course-Instructor Management System
+    </div>
+
+    <div class="navbar-links">
+
+    <a routerLink="/">
+            Home
+        </a>
+
+    <a routerLink="/organizer" *ngIf="authService.isOrganizer()">
+            Organizer</a>
+
+    <a routerLink="/admin" *ngIf="authService.isAdmin()">
+            Admin</a>
+
+    <a routerLink="/admin/createInstructor" *ngIf="authService.isAdmin()">
+            Create Instructor</a>
+
+    <a routerLink="/admin/createCourse" *ngIf="authService.isAdmin()">
+            Create Course</a>
+
+    <a routerLink="/signup" *ngIf="!authService.isLoggedIn()">
+            Register</a>
+
+    <a routerLink="/login" *ngIf="!authService.isLoggedIn()">
+            Login</a>
+
+    <a *ngIf="authService.isLoggedIn()" (click)="logout()">
+            Logout
+        </a>
+
+    </div>
+
+</nav>
+
+
+
+ts
+
 
 import { Component } from '@angular/core';
-import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-navbar',
-  templateUrl: './navbar.component.html'
+  templateUrl: './navbar.component.html',
+  styleUrls: ['./navbar.component.css']
 })
 export class NavbarComponent {
 
-  constructor(public authService: AuthService, private router: Router) {}
+  constructor(
+    public authService: AuthService,
+    private router: Router
+  ) { }
 
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
   }
+
 }
 
 
-navbar.comp.html_______________________________________
-
-<nav class="navbar">
-  <div class="brand">Course-Instructor Management System</div>
-  <ul class="nav-links">
-    <li><a routerLink="/">Home</a></li>
-
-    <li *ngIf="authService.isOrganizer()"><a routerLink="/organizer">Organizer</a></li>
-
-    <li *ngIf="authService.isAdmin()"><a routerLink="/admin">Admin</a></li>
-    <li *ngIf="authService.isAdmin()"><a routerLink="/admin/createInstructor">Create Instructor</a></li>
-    <li *ngIf="authService.isAdmin()"><a routerLink="/admin/createCourse">Create Course</a></li>
-
-    <li *ngIf="!authService.isLoggedIn()"><a routerLink="/signup">Register</a></li>
-    <li *ngIf="!authService.isLoggedIn()"><a routerLink="/login">Login</a></li>
-
-    <li *ngIf="authService.isLoggedIn()"><a style="cursor: pointer;" (click)="logout()">Logout</a></li>
-
-</ul>
-</nav>
+orgi css
 
 
 
-navbar.css----------------------------------
+.organizer-container {
+    width: 82%;
+    margin: 50px auto;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 0 18px lightgray;
+    font-family: Georgia, serif;
+}
+
+h1 {
+    text-align: center;
+    color: #0d85f2;
+    font-size: 42px;
+    margin-bottom: 50px;
+}
+
+h2 {
+    color: #0d85f2;
+    font-size: 32px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #dddddd;
+    display: inline-block;
+    padding-bottom: 10px;
+}
+
+.section {
+    margin-bottom: 50px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 0 12px lightgray;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+thead {
+    background-color: #0d85f2;
+    color: white;
+}
+
+th,
+td {
+    padding: 18px;
+    text-align: center;
+    font-size: 18px;
+}
+
+select {
+    width: 90%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+}
+
+.assign-btn,
+.release-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 5px;
+    font-size: 17px;
+    cursor: pointer;
+}
+
+.assign-btn:hover,
+.release-btn:hover {
+    background-color: #218838;
+}
+
+.nested-table {
+    box-shadow: none;
+    margin: 0;
+}
+
+.nested-table td {
+    border: none;
+    padding: 14px;
+}
+
+#no_unassigned,
+#no_instructors {
+    font-size: 18px;
+    margin-top: 25px;
+}
 
 
-.navbar {
-    display: flex; justify-content: space-between; align-items: center;
-    background-color: #1e90ff; padding: 15px 30px; color: white;
-  }
-  .brand {
-    font-size: 22px; font-weight: bold;
-    font-family: 'Times New Roman', serif;
-  }
-  .nav-links {
-    list-style: none; display: flex; gap: 30px; margin: 0; padding: 0;
-  }
-  .nav-links a {
-    color: white; text-decoration: none; font-size: 16px;
-  }
-  .nav-links a:hover { text-decoration: underline; }
-  
+
+html
+
+<div class="organizer-container">
+
+    <h1>INSTRUCTOR-COURSE ASSIGNMENT PANEL</h1>
+
+    <div class="section">
+
+    <h2>Unassigned Courses</h2>
+
+    <ng-template [ngIf]="unassignedCourses.length === 0">
+        <p id="no_unassigned">
+            No Unassigned Courses
+        </p>
+    </ng-template>
+
+    <ng-template [ngIf]="unassignedCourses.length > 0">
+        <table>
+        <thead>
+                <tr>
+                    <th>TITLE</th>
+                    <th>DESCRIPTION</th>
+                    <th>DURATION</th>
+                    <th>INSTRUCTOR</th>
+                    <th>ACTION</th>
+                </tr>
+            </thead>
+
+    <tbody>
+        <ng-template ngFor let-course [ngForOf]="unassignedCourses">
+            <tr>
+                <td>{{ course.Title }}</td>
+                <td>{{ course.Description }}</td>
+                <td>{{ course.Duration }} days</td>
+
+                <td>
+                    <select name="selectedInstructor{{ course.CourseId || 0 }}"
+                        [(ngModel)]="selectedInstructorIds[course.CourseId || 0]">
+
+                        <option [ngValue]="undefined">Select Instructor</option>
+
+                        <ng-template ngFor let-instructor [ngForOf]="instructors">
+                            <option [ngValue]="instructor.InstructorId || 0">
+                                {{ instructor.Name }} ({{ instructor.Email }})
+                            </option>
+                        </ng-template> 
+                    </select>
+                    </td>
+
+    <td>
+                        <button class="assign-btn"
+                            (click)="assignCourseToInstructor(course, selectedInstructorIds[course.CourseId || 0])" >
+                            Assign to Instructor
+                        </button>
+                    </td>
+                </tr>
+        </ng-template>
+            </tbody>
+        </table>
+    </ng-template>
+
+    </div>
+
+    <div class="section">
+
+    <h2>Instructor List With Courses</h2>
+
+    <ng-template [ngIf]="instructors.length === 0">
+        <p id="no_instructors">
+            No Instructors Available</p>
+            </ng-template>
+
+    <ng-template [ngIf]="instructors.length > 0">
+        <table>
+        <thead>
+                <tr>
+                    <th>INSTRUCTOR NAME</th>
+                    <th>EMAIL</th>
+                    <th>COURSES</th>
+                    <th>Duration</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+    <tbody>
+                <ng-template ngFor let-instructor [ngForOf]="instructors">
+                    <tr>
+                    <td>{{ instructor.Name }}</td>
+                    <td>{{ instructor.Email }}</td>
+
+                    <td>
+                        
+                                <ng-template ngFor let-course [ngForOf]="getCoursesByInstructor(instructor.InstructorId || 0)">
+                                    <div>
+                                        {{ course.Title }}
+
+                                    </div>
+                                </ng-template>
+                    </td>
+
+                    <td>
+                        
+                        <ng-template ngFor let-course [ngForOf]="getCoursesByInstructor(instructor.InstructorId || 0)">
+                            <div>
+                                {{ course.Duration }} days
+
+                            </div>
+                        </ng-template>
+            </td>
+
+            <td>
+                        
+                <ng-template ngFor let-course [ngForOf]="getCoursesByInstructor(instructor.InstructorId || 0)">
+                    <div>
+                        <button class="release-btn"
+                        (click)="releaseCourseFromInstructor(course, instructor.InstructorId || 0)">
+                        Release Course
+                    </button>
+                    </div>
+                </ng-template>
+            </td>
+                </tr>
+                </ng-template>
+            </tbody>
+        </table>
+    </ng-template>
+
+    </div>
+
+</div>
 
 
-===========================================================================================
-============================================================================================
 
-
-organizer.comp.ts_____________________________________________
+ts
 
 
 import { Component, OnInit } from '@angular/core';
-import { CourseService } from '../services/course.service';
-import { InstructorService } from '../services/instructor.service';
+
 import { Course } from '../../models/course.model';
 import { Instructor } from '../../models/instructor.model';
 
+import { CourseService } from '../services/course.service';
+import { InstructorService } from '../services/instructor.service';
+
 @Component({
   selector: 'app-organizer',
-  templateUrl: './organizer.component.html'
+  templateUrl: './organizer.component.html',
+  styleUrls: ['./organizer.component.css']
 })
 export class OrganizerComponent implements OnInit {
-  courses: Course[] = [];
-  unassignedCourses: Course[] = [];
-  instructors: Instructor[] = [];
 
-  constructor(private courseService: CourseService, private instructorService: InstructorService) {}
+  courses: Course[] = [];
+  instructors: Instructor[] = [];
+  unassignedCourses: Course[] = [];
+
+  selectedInstructorIds: { [courseId: number]: number } = {};
+
+  constructor(
+    private courseService: CourseService,
+    private instructorService: InstructorService
+  ) { }
 
   ngOnInit(): void {
     this.getCourses();
@@ -841,282 +1646,323 @@ export class OrganizerComponent implements OnInit {
   }
 
   getCourses(): void {
-    this.courseService.getCourses().subscribe(data => {
-      this.courses = data;
-      this.unassignedCourses = data.filter(c => !c.InstructorId);
+    this.courseService.getCourses().subscribe({
+      next: (data) => {
+        this.courses = data;
+        this.unassignedCourses = this.courses.filter(course =>
+          course.InstructorId === null ||
+          course.InstructorId === undefined
+        );
+      },
+      error: (error) => {
+        console.log(error);
+      }
     });
   }
 
   getInstructors(): void {
-    this.instructorService.getInstructors().subscribe(data => this.instructors = data);
+    this.instructorService.getInstructors().subscribe({
+      next: (data) => {
+        this.instructors = data;
+      },
+      error: (error) => {
+        console.log(error);
+      }
+    });
   }
 
   assignCourseToInstructor(course: Course, selectedInstructorId: number): void {
-    course.InstructorId = selectedInstructorId;
-    if (course.CourseId) {
-      this.courseService.updateCourse(course.CourseId, course).subscribe(() => {
+    if (!selectedInstructorId || !course.CourseId) {
+      return;
+    }
+
+    const updatedCourse: Course = {
+      ...course,
+      InstructorId: selectedInstructorId
+    };
+
+    this.courseService.updateCourse(course.CourseId, updatedCourse).subscribe({
+      next: () => {
         this.getCourses();
         this.getInstructors();
-      });
-    }
+      },
+      error: (error) => {
+        console.log(error);
+      }
+    });
   }
 
-  releaseCourseFromInstructor(course: Course): void {
-    course.InstructorId = null;
-    if (course.CourseId) {
-      this.courseService.updateCourse(course.CourseId, course).subscribe(() => {
+  releaseCourseFromInstructor(course: Course, selectedInstructorId: number): void {
+    if (!course.CourseId) {
+      return;
+    }
+
+    const updatedCourse: Course = {
+      ...course,
+      InstructorId: null as any
+    };
+
+    this.courseService.updateCourse(course.CourseId, updatedCourse).subscribe({
+      next: () => {
         this.getCourses();
         this.getInstructors();
-      });
-    }
+      },
+      error: (error) => {
+        console.log(error);
+      }
+    });
   }
+
+  getCoursesByInstructor(instructorId: number): Course[] {
+    return this.courses.filter(course => course.InstructorId === instructorId);
+  }
+
 }
 
 
+reg css
 
-organizer.comp.html---------------------------------------------
 
-<div class="organizer-container">
-  <h2>INSTRUCTOR-COURSE ASSIGNMENT PANEL</h2>
+.error-message,
+.validation-message {
 
-<h3>Unassigned Courses</h3>
-  <table *ngIf="unassignedCourses.length > 0; else noUnassigned">
-    <thead>
-      <tr>
-        <th>Title</th>
-        <th>Description</th>
-        <th>Duration</th>
-        <th>Instructor</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let course of unassignedCourses">
-        <td>{{course.Title}}</td>
-        <td>{{course.Description}}</td>
-        <td>{{course.Duration}} days</td>
-        <td>
-          <select [(ngModel)]="course.InstructorId">
-            <option *ngFor="let inst of instructors" [value]="inst.InstructorId">{{inst.Name}}</option>
-          </select>
-        </td>
-        <td>
-          <button (click)="assignCourseToInstructor(course, course.InstructorId!)">Assign to Instructor</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <ng-template #noUnassigned>
-    <p id="no_unassigned">No Unassigned Courses</p>
-  </ng-template>
+  color: red;
 
-<h3>Instructor List With Courses</h3>
-  <table *ngIf="instructors.length > 0; else noInstructors">
-    <thead>
-      <tr>
-        <th>Instructor Name</th>
-        <th>Email</th>
-        <th>Courses</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let inst of instructors">
-        <td>{{inst.Name}}</td>
-        <td>{{inst.Email}}</td>
-        <td>
-          <table>
-            <tbody>
-              <tr *ngFor="let course of inst.Courses">
-                <td>{{course.Title}}</td>
-                <td>{{course.Duration}} days</td>
-                <td><button (click)="releaseCourseFromInstructor(course)">Release Course</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <ng-template #noInstructors>
-    <p id="no_instructors">No Instructors Available</p>
-  </ng-template>
-</div>
+  margin-top: 8px;
+
+  margin-bottom: 10px;
+
+  font-style: italic;
+
+}
+
+  form {
+    width: 500px;
+    margin: auto;
+  }
+
+  input,
+  select,
+  button {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px;
+  }
+
+
+html
 
 
 
+<form #registerForm="ngForm" (ngSubmit)="register()">
 
-organizer.css_____________________________________________
+    <h1>REGISTRATION</h1>
+    
+      <label>Username</label>
+    
+      <input type="text" id="username" name="username" [(ngModel)]="username" required #usernameRef="ngModel"
+        (input)="onFieldInput('username', $event)">
+    
+      <label>Password</label>
+    
+      <input type="password" id="password" name="password" [(ngModel)]="password" required #passwordRef="ngModel"
+        (input)="onFieldInput('password', $event)">
+    
+    <div class="validation-message" *ngIf="password !== '' && !isPasswordStrong()">
+        Password must include at least one uppercase letter, one lowercase letter, one digit, and one special character
+      </div>
+    
+      <label>Confirm Password</label>
+    
+      <input type="password" id="confirmPassword" name="confirmPassword" [(ngModel)]="confirmPassword" required
+        #confirmPasswordRef="ngModel" (input)="onFieldInput('confirmPassword', $event)">
+    
+      <label>Role</label>
+    
+    <select id="role" name="role" [(ngModel)]="role" required #roleRef="ngModel" (change)="lastField = 'role'">
 
-.organizer-container { padding: 30px; }
+      <option value="">Select Role</option>
+      <option value="Admin">Admin</option>
+      <option value="Organizer">Organizer</option>
+
+    </select>
+    
+    <div class="error-message">
+        {{ getRegisterErrorMessage() }}
+      </div>
+    
+    <button id="submit" type="submit" [disabled]="registerForm.invalid || password !== confirmPassword">
+        REGISTER
+      </button>
+    
+</form>
 
 
-======================================================================================================
 
-======================================================================================================
+ts
 
 
-register.comp.ts------------------------------------------------------
 
 
 import { Component } from '@angular/core';
-import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
+
+import { AuthService } from '../services/auth.service';
 import { User } from '../../models/user.model';
 
 @Component({
   selector: 'app-registration',
-  templateUrl: './registration.component.html'
+  templateUrl: './registration.component.html',
+  styleUrls: ['./registration.component.css']
 })
 export class RegistrationComponent {
-  user: User = { Username: '', Password: '', Role: '' };
-  confirmPassword = '';
-  A: string[] = ['Admin', 'Organizer'];
 
-  
-  uDirty = false;
-  pDirty = false;
-  cDirty = false;
-  rDirty = false;
+  username: string = '';
+  password: string = '';
+  confirmPassword: string = '';
+  role: string = '';
 
-  constructor(private authService: AuthService, private router: Router) {}
+  errorMessage: string = '';
+  lastField: string = '';
+
+  passwordPattern: string = '.+';
+
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) { }
+
+  onFieldInput(fieldName: string, event: any): void {
+    this.lastField = fieldName;
+
+    if (fieldName === 'username') {
+      this.username = event.target.value;
+    }
+
+    if (fieldName === 'password') {
+      this.password = event.target.value;
+    }
+
+    if (fieldName === 'confirmPassword') {
+      this.confirmPassword = event.target.value;
+    }
+  }
 
   register(): void {
-    if (this.user.Password !== this.confirmPassword) return;
+    this.errorMessage = '';
 
-    this.authService.register(this.user).subscribe({
-      next: () => this.router.navigate(['/login']),
-      error: (err) => console.error(err)
+    if (this.password !== this.confirmPassword) {
+      this.errorMessage = 'Passwords do not match';
+      return;
+    }
+
+    const newUser: User = {
+      Username: this.username,
+      Password: this.password,
+      Role: this.role
+    };
+
+    this.authService.register(newUser).subscribe({
+      next: () => {
+        this.router.navigate(['/login']);
+      },
+      error: () => {
+        this.errorMessage = 'Registration failed';
+      }
     });
+  }
+
+  getRegisterErrorMessage(): string {
+    if (
+      this.password !== '' &&
+      this.confirmPassword !== '' &&
+      this.password !== this.confirmPassword
+    ) {
+      return 'Passwords do not match';
+    }
+
+    if (this.lastField === 'username' && this.username === '') {
+      return 'Username is required';
+    }
+
+    if (this.lastField === 'password' && this.password === '') {
+      return 'Password is required';
+    }
+
+    if (this.lastField === 'confirmPassword' && this.confirmPassword === '') {
+      return 'Confirm Password is required';
+    }
+
+    return '';
+  }
+
+  isPasswordStrong(): boolean {
+    return (
+      /[A-Z]/.test(this.password) &&
+      /[a-z]/.test(this.password) &&
+      /\d/.test(this.password) &&
+      /[@$!%?&#]/.test(this.password)
+    );
   }
 }
 
 
 
-register.comp.html-----------------------------------------------------------
-
-
-<div class="registration-container">
-  <h2>REGISTRATION</h2>
-  <form #regForm="ngForm" (ngSubmit)="regForm.valid && user.Password === confirmPassword && register()">
-
-    <label>Username *</label>
-    <input type="text" id="username" name="username" [(ngModel)]="user.Username" required #userInp
-      (input)="uDirty=true">
-    <div class="error-message" *ngIf="uDirty && userInp.value === ''">Username is required</div>
-
-    <label>Password *</label>
-    <input type="password" id="password" name="password" [(ngModel)]="user.Password" required
-      pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" #passInp (input)="pDirty=true">
-    <div class="error-message" *ngIf="pDirty && passInp.value === ''">Password is required</div>
-
-    <label>Confirm Password *</label>
-    <input type="password" id="confirmPassword" name="confirmPassword" [(ngModel)]="confirmPassword" required
-      #confirmInp (input)="cDirty=true">
-    <div class="error-message" *ngIf="cDirty && confirmInp.value === ''">Confirm Password is required</div>
-    <div class="error-message" *ngIf="cDirty && confirmInp.value !== '' && confirmInp.value !== passInp.value">Passwords
-      do not match</div>
-
-    <label>Role *</label>
-    <select id="role" name="role" [(ngModel)]="user.Role" required #roleInp (change)="rDirty=true">
-      <option value="">Select a role</option>
-      <option *ngFor="let r of A" [value]="r">{{r}}</option>
-    </select>
-    <div class="error-message" *ngIf="rDirty && roleInp.value === ''">Role is required</div>
-
-    <button type="submit" id="submit"
-      [disabled]="regForm.invalid || confirmPassword !== user.Password">REGISTER</button>
-
-  </form>
-</div>
-
-
-
-register.csss------------------------------------------------------
-
-.form-container {
-    max-width: 600px;
-    margin: 40px auto;
-    padding: 30px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  }
-  .title { color: #1e90ff; text-align: center; font-weight: bold; }
-  label { display: block; margin-top: 15px; color: #333; }
-  .required { color: red; }
-  input, select {
-    width: 100%; padding: 10px; margin-top: 6px;
-    border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;
-  }
-  .error-message { color: #e74c3c; font-style: italic; margin-top: 4px; font-size: 14px; }
-  button {
-    width: 100%; padding: 12px; margin-top: 25px;
-    background-color: #1e90ff; color: white; border: none;
-    border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;
-  }
-  button:disabled { background-color: #c0c0c0; cursor: not-allowed; }
-  
-
-
-
-=========================================================================================
-==========================================================================================
-
-
-services folder----------------------------------------------------------
-================================================================================
-
-
-auth.service.ts----------------------------
------------------------------------------------
+authserves
 
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
+
 import { User } from '../../models/user.model';
 import { LoginModel } from '../../models/login-model.model';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class AuthService {
-  public baseUrl = 'https://8080-adffaebecead351852509adcdcbdcfaone.premiumproject.examly.io/api/users';
+
+  public baseUrl = 'https://8080-ecdeabffc351487620adcdcbdcfaone.premiumproject.examly.io/api/users';
+
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.isLoggedIn());
+  public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
-  private storeUserData(userData: any): void {
-    if (!userData) return;
-    const role = userData.role || userData.Role;
-    if (role) {
-      localStorage.setItem('role', role);
-    }
-    localStorage.setItem('token', 'auth-token');
-  }
-
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   register(newUser: User): Observable<User> {
-    return this.http.post<User>(`${this.baseUrl}/register`, newUser).pipe(
-      tap(res => this.storeUserData(res))
-    );
+    return this.http
+      .post<User>(`${this.baseUrl}/register`, newUser)
+      .pipe(
+        catchError(this.handleError)
+      );
   }
 
   login(loginUser: LoginModel): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/login`, loginUser).pipe(
-      tap(res => {
-        // Handles both the real .NET wrapper {user: ...} and the flat mock {role: ...}
-        const userData = res && res.user ? res.user : res;
-        this.storeUserData(userData);
-        this.updateAuthenticationStatus(true);
-      })
-    );
+    return this.http
+      .post<any>(`${this.baseUrl}/login`, loginUser)
+      .pipe(
+        tap((response: any) => {
+          const loggedInUser = response.user || response.User;
+
+    if (loggedInUser) {
+            this.storeUserData(loggedInUser);
+            this.updateAuthenticationStatus(true);
+          }
+        }),
+        catchError(this.handleError)
+      );
   }
 
   logout(): void {
-    localStorage.clear();
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('username');
     this.updateAuthenticationStatus(false);
   }
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('role');
+    return localStorage.getItem('token') !== null;
   }
 
   isAdmin(): boolean {
@@ -1130,132 +1976,215 @@ export class AuthService {
   updateAuthenticationStatus(isAuthenticated: boolean): void {
     this.isAuthenticatedSubject.next(isAuthenticated);
   }
+
+  private storeUserData(user: any): void {
+    localStorage.setItem('token', 'loggedIn');
+
+    if (user.Role) {
+      localStorage.setItem('role', user.Role);
+    }
+
+    if (user.role) {
+      localStorage.setItem('role', user.role);
+    }
+
+    if (user.Username) {
+      localStorage.setItem('username', user.Username);
+    }
+
+    if (user.username) {
+      localStorage.setItem('username', user.username);
+    }
+  }
+
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    console.log('API Error:', error);
+    return throwError(() => error);
+  }
+
 }
 
 
-course.service.ts----------------------------
-----------------------------------------------
 
+course
 
 
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+
 import { Course } from '../../models/course.model';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class CourseService {
-  public baseUrl = 'https://8080-adffaebecead351852509adcdcbdcfaone.premiumproject.examly.io/api/Course';
 
-  constructor(private http: HttpClient) {}
+  private baseUrl = 'https://8080-ecdeabffc351487620adcdcbdcfaone.premiumproject.examly.io/api/Course';
+
+  constructor(private http: HttpClient) { }
 
   getCourses(): Observable<Course[]> {
-    return this.http.get<Course[]>(`${this.baseUrl}/GetCourses`);
+    return this.http
+      .get<Course[]>(`${this.baseUrl}/GetCourses`)
+      .pipe(catchError(this.handleError));
   }
 
   createCourse(course: Course): Observable<Course> {
-    return this.http.post<Course>(`${this.baseUrl}/PostCourse`, course);
+    return this.http
+      .post<Course>(`${this.baseUrl}/PostCourse`, course)
+      .pipe(catchError(this.handleError));
   }
 
   updateCourse(courseId: number, course: Course): Observable<Course> {
-    return this.http.put<Course>(`${this.baseUrl}/PutCourse/${courseId}`, course);
+    return this.http
+      .put<Course>(`${this.baseUrl}/PutCourse/${courseId}`, course)
+      .pipe(catchError(this.handleError));
   }
 
   deleteCourse(courseId: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/DeleteCourse/${courseId}`);
+    return this.http
+      .delete<void>(`${this.baseUrl}/DeleteCourse/${courseId}`)
+      .pipe(catchError(this.handleError));
   }
+
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    console.log('Course API Error:', error);
+    return throwError(() => error);
+  }
+
 }
 
 
 
-
-instructor.sercice.ts-------------------------
-----------------------------------------------
+instructor
 
 
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+
 import { Instructor } from '../../models/instructor.model';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class InstructorService {
-  public baseUrl = 'https://8080-adffaebecead351852509adcdcbdcfaone.premiumproject.examly.io/api/Instructor';
 
-  constructor(private http: HttpClient) {}
+  private baseUrl = 'https://8080-ecdeabffc351487620adcdcbdcfaone.premiumproject.examly.io/api/Instructor';
+
+  constructor(private http: HttpClient) { }
 
   getInstructors(): Observable<Instructor[]> {
-    return this.http.get<Instructor[]>(`${this.baseUrl}/GetInstructors`);
+    return this.http
+      .get<Instructor[]>(`${this.baseUrl}/GetInstructors`)
+      .pipe(catchError(this.handleError));
   }
 
   createInstructor(instructor: Instructor): Observable<Instructor> {
-    return this.http.post<Instructor>(`${this.baseUrl}/PostInstructor`, instructor);
+    return this.http
+      .post<Instructor>(`${this.baseUrl}/PostInstructor`, instructor)
+      .pipe(catchError(this.handleError));
   }
 
   updateInstructor(instructorId: number, instructor: Instructor): Observable<Instructor> {
-    return this.http.put<Instructor>(`${this.baseUrl}/PutInstructor/${instructorId}`, instructor);
+    return this.http
+      .put<Instructor>(`${this.baseUrl}/PutInstructor/${instructorId}`, instructor)
+      .pipe(catchError(this.handleError));
   }
 
   deleteInstructor(instructorId: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/DeleteInstructor/${instructorId}`);
+    return this.http
+      .delete<void>(`${this.baseUrl}/DeleteInstructor/${instructorId}`)
+      .pipe(catchError(this.handleError));
   }
+
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    console.log('Instructor API Error:', error);
+    return throwError(() => error);
+  }
+
 }
 
 
-========================================================
-app.module.ts-----------------------------------------
 
+app-route-module
 
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+import { RouterModule, Routes } from '@angular/router';
 
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-import { NavbarComponent } from './navbar/navbar.component';
 import { HomeComponent } from './home/home.component';
 import { AdminComponent } from './admin/admin.component';
 import { OrganizerComponent } from './organizer/organizer.component';
 import { LoginComponent } from './login/login.component';
 import { RegistrationComponent } from './registration/registration.component';
 import { ErrorComponent } from './error/error.component';
-import { CourseComponent } from './course/course.component';
-import { InstructorComponent } from './instructor/instructor.component';
+
 import { CreateCourseComponent } from './course/create-course/create-course.component';
 import { CreateInstructorComponent } from './instructor/create-instructor/create-instructor.component';
 
+import { AuthGuard } from './authguard/auth.guard';
+
+const routes: Routes = [
+  {
+    path: '',
+    component: HomeComponent
+  },
+  {
+    path: 'home',
+    component: HomeComponent
+  },
+  {
+    path: 'admin',
+    component: AdminComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'admin/createCourse',
+    component: CreateCourseComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'admin/createInstructor',
+    component: CreateInstructorComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'organizer',
+    component: OrganizerComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'login',
+    component: LoginComponent
+  },
+  {
+    path: 'signup',
+    component: RegistrationComponent
+  },
+  {
+    path: 'error',
+    component: ErrorComponent
+  },
+  {
+    path: '**',
+    redirectTo: 'error'
+  }
+];
+
 @NgModule({
-  declarations: [
-    AppComponent,
-    NavbarComponent,
-    HomeComponent,
-    AdminComponent,
-    OrganizerComponent,
-    LoginComponent,
-    RegistrationComponent,
-    ErrorComponent,
-    CourseComponent,
-    InstructorComponent,
-    CreateCourseComponent,
-    CreateInstructorComponent
-  ],
-  imports: [
-    BrowserModule,
-    FormsModule,
-    HttpClientModule,
-    AppRoutingModule
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
 })
-export class AppModule { }
+export class AppRoutingModule { }
 
 
 
-==========================================================
-app.cmp.ts don't touch
-=========================================================
+appcomponet.ts
+
+
 import { Component } from '@angular/core';
 
 @Component({
@@ -1268,238 +2197,160 @@ export class AppComponent {
 }
 
 
-=============================================================
-app.comp.html
-============================================================
-<app-navbar></app-navbar>
-<router-outlet></router-outlet>
+appmodule
 
-
-================================================================
-app.routing.model.ts
-================================================================
 
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { HomeComponent } from './home/home.component';
+import { BrowserModule } from '@angular/platform-browser';
+import { FormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+
+import { RegistrationComponent } from './registration/registration.component';
+import { LoginComponent } from './login/login.component';
+import { NavbarComponent } from './navbar/navbar.component';
 import { AdminComponent } from './admin/admin.component';
+import { OrganizerComponent } from './organizer/organizer.component';
 import { CreateCourseComponent } from './course/create-course/create-course.component';
 import { CreateInstructorComponent } from './instructor/create-instructor/create-instructor.component';
-import { OrganizerComponent } from './organizer/organizer.component';
-import { LoginComponent } from './login/login.component';
-import { RegistrationComponent } from './registration/registration.component';
+import { HomeComponent } from './home/home.component';
 import { ErrorComponent } from './error/error.component';
-import { AuthGuard } from './authguard/auth.guard';
-
-const routes: Routes = [
-  { path: '', component: HomeComponent },
-  { path: 'admin', component: AdminComponent, canActivate: [AuthGuard], data: { role: 'Admin' } },
-  { path: 'admin/createCourse', component: CreateCourseComponent, canActivate: [AuthGuard], data: { role: 'Admin' } },
-  { path: 'admin/createInstructor', component: CreateInstructorComponent, canActivate: [AuthGuard], data: { role: 'Admin' } },
-  { path: 'organizer', component: OrganizerComponent, canActivate: [AuthGuard], data: { role: 'Organizer' } },
-  { path: 'login', component: LoginComponent },
-  { path: 'signup', component: RegistrationComponent },
-  { path: 'error', component: ErrorComponent },
-  { path: '**', redirectTo: '/error' }
-];
+import { CourseComponent } from './course/course.component';
+import { InstructorComponent } from './instructor/instructor.component';
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  declarations: [
+    AppComponent,
+    RegistrationComponent,
+    LoginComponent,
+    NavbarComponent,
+    AdminComponent,
+    OrganizerComponent,
+    HomeComponent,
+    ErrorComponent,
+    CreateCourseComponent,
+    CreateInstructorComponent,
+    CourseComponent,
+    InstructorComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    FormsModule,
+    HttpClientModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
 })
-export class AppRoutingModule { }
+export class AppModule { }
+
+
+model course
+
+
+import { Instructor } from './instructor.model';
+
+export interface Course {
+  CourseId?: number;
+  Title: string;
+  Description: string;
+  Duration: number;
+  InstructorId?: number;
+  Instructor?: Instructor;
+}
+
+
+instructor
+
+
+import { Course } from './course.model';
+
+export interface Instructor {
+  InstructorId?: number;
+  Name: string;
+  Email: string;
+  HireDate: Date | string;
+  Courses?: Course[];
+}
+
+
+login
+
+export interface LoginModel {
+    Username: string;
+    Password: string;
+  }
+
+
+user
+
+
+export interface User {
+    Id?: number;
+    Username: string;
+    Password: string;
+    Role: string;
+  }
+
+
 
 program.cs
-using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
+
+
 using dotnetapp.Models;
- 
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
- 
+
+// Add services to the container.
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
-        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
- 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
- 
+
+// CORS configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
+    options.AddPolicy("AllowAngular",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
 });
- 
+
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
- 
-builder.WebHost.UseUrls("http://0.0.0.0:8080");
- 
+
+// Database connection
+builder.Services.AddDbContext<ApplicationDbContext>(o =>o.UseSqlServer("User Id=sa;password=examlyMssql@123;server=localhost;Database=appdb;trusted_connection=false;Persist Security Info=false;Encrypt=false"));
+
 var app = builder.Build();
- 
-app.UseCors("AllowAll");
- 
+
+// Configure the HTTP request pipeline.
+
 app.UseSwagger();
 app.UseSwaggerUI();
- 
+
+app.UseCors("AllowAngular");
+
+app.UseHttpsRedirection();
+
 app.UseAuthorization();
+
 app.MapControllers();
- 
+
 app.Run();
- 
- 
- 
- 
- 
- 
-style.css
- 
-@import url('https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css');
- 
-body {
-    background-color: #f8f9fa;
-    font-family: Arial, sans-serif;
-}
- 
- 
-.navbar {
-    background-color: #0d6efd;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.navbar .brand {
-    color: white;
-    font-size: 1.25rem;
-    font-weight: bold;
-}
-.nav-links {
-    list-style: none;
-    display: flex;
-    gap: 1.5rem;
-    margin: 0;
-    padding: 0;
-}
-.nav-links li a {
-    color: white;
-    text-decoration: none;
-}
-.nav-links li a:hover {
-    text-decoration: underline;
-}
- 
- 
-.login-container, .registration-container, .create-course-container, .create-instructor-container {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    max-width: 500px;
-    margin: 3rem auto;
-}
- 
- 
-.home-container, .admin-container, .organizer-container {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    max-width: 900px;
-    margin: 3rem auto;
-    text-align: center;
-}
- 
- 
-h2 {
-    color: #0d6efd;
-    text-align: center;
-    margin-bottom: 1.5rem;
-    font-weight: bold;
-}
-h3 {
-    color: #0d6efd;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-}
-label {
-    font-weight: bold;
-    margin-top: 10px;
-    display: block;
-    text-align: left;
-}
-input, select, textarea {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
- 
- 
-button {
-    background-color: #0d6efd;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    width: 100%;
-    margin-top: 15px;
-    font-weight: bold;
-}
-button:disabled {
-    background-color: #a0c4ff;
-    cursor: not-allowed;
-}
- 
- 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-}
-th {
-    background-color: #0d6efd;
-    color: white;
-    padding: 12px;
-}
-td {
-    padding: 12px;
-    border: 1px solid #dee2e6;
-    vertical-align: middle;
-}
- 
- 
-.edit-btn {
-    background-color: #198754;
-    width: auto;
-    margin: 0 5px 0 0;
-    padding: 5px 10px;
-}
-.delete-btn {
-    background-color: #dc3545;
-    width: auto;
-    margin: 0;
-    padding: 5px 10px;
-}
- 
- 
-.error-message {
-    color: #dc3545;
-    font-size: 0.85rem;
-    margin-bottom: 10px;
-    text-align: left;
-    font-style: italic;
-}
- 
- 
+
+
+
+
+
+
 
