@@ -1,619 +1,529 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using dotnetapp.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+Admin:
  
-namespace dotnetapp.Controllers
-{
+ts:
+----
  
-    public class AccountController : Controller
-    {
-        private readonly UserManager <IdentityUser> _userManager;
-        private readonly SignInManager <IdentityUser> _signInManager;
-       
-        public AccountController(UserManager<IdentityUser>userManager,SignInManager<IdentityUser>signInManager){
-            _userManager=userManager;
-            _signInManager=signInManager;
-        }
+import { Component, OnInit } from '@angular/core';
+import { Instructor } from '../../models/instructor.model';
+import { Course } from '../../models/course.model';
+import { InstructorService } from '../services/instructor.service';
+import { CourseService } from '../services/course.service';
  
-        [HttpGet]
-        public IActionResult Register()
-        {
-            return View();
-        }
+@Component({
+  selector: 'app-admin',
+  templateUrl: './admin.component.html',
+  styleUrls: ['./admin.component.css']
+})
+export class AdminComponent implements OnInit {
  
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register (RegisterViewModel model){
-            if(ModelState.IsValid){
-                IdentityUser user=new IdentityUser{
-                    UserName=model.Email,
-                    Email=model.Email
-                };
-                var result=await _userManager.CreateAsync(user,model.Password);
-                if(result.Succeeded){
-                    await _signInManager.SignInAsync(user, isPersistent: true);
-                    return RedirectToAction("Index","Instructor");
-                }
-                foreach(var error in result.Errors){
-                    ModelState.AddModelError("",error.Description);
-                }  
+  instructors: Instructor[] = [];
+  courses: Course[] = [];
  
-            }
-            return View(model);
-        }
+  editedInstructor: Instructor | null = null;
+  editedCourse: Course | null = null;
  
-        [HttpGet]
-        // [ValidateAntiForgeryToken]
-         public async Task<IActionResult> Login (LoginViewModel model){
-            if(ModelState.IsValid){
-               
-               
-                var result=await _signInManager.PasswordSignInAsync(
-                    model.Email!,model.Password!,true,false);
+  constructor(
+    private instructorService: InstructorService,
+    private courseService: CourseService
+  ) { }
  
-                if(result.Succeeded){
-                   
-                    return RedirectToAction("Index","Instructor");
-                }
-                ModelState.AddModelError("","Invalid login attempt.");  
+  ngOnInit(): void {
+    this.getInstructors();
+    this.getCourses();
+  }
  
-            }
-            return View(model);
-        }
+  getInstructors(): void {
+    this.instructorService.getInstructors().subscribe(data => {
+      this.instructors = data;
+    });
+  }
  
-        [HttpGet]
-        public async Task<IActionResult>Logout(){
-            await _signInManager.SignOutAsync();
-            return RedirectToAction("Login","Account");
+  editInstructor(instructor: Instructor): void {
+    this.editedInstructor = { ...instructor };
+  }
  
-        }
- 
- 
+  saveEditedInstructor(): void {
+    if (this.editedInstructor && this.editedInstructor.InstructorId) {
+      this.instructorService
+        .updateInstructor(this.editedInstructor.InstructorId, this.editedInstructor)
+        .subscribe(() => {
+          this.getInstructors();
+          this.editedInstructor = null;
+        });
     }
-}
+  }
  
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using dotnetapp.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+  cancelEditInstructor(): void {
+    this.editedInstructor = null;
+  }
  
-namespace dotnetapp.Controllers
-{
-    [Route("courses")]
-    public class CourseController : Controller
-    {
-        private readonly ApplicationDbContext _context;
-        private static List<Course> Courses = new List<Course>();
-        public CourseController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+  deleteInstructor(instructorId: number): void {
+    this.instructorService.deleteInstructor(instructorId).subscribe(() => {
+      this.getInstructors();
+    });
+  }
  
-        [HttpGet("Index")]
-        public IActionResult Index()
-        {
-            return View(Courses);
-        }
+  getCourses(): void {
+    this.courseService.getCourses().subscribe(data => {
+      this.courses = data;
+    });
+  }
  
-        [HttpGet("Create")]
-        public IActionResult Create()
-        {
-            return View();
-        }
+  editCourse(course: Course): void {
+    this.editedCourse = { ...course };
+  }
  
-        [HttpPost("Create")]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(Course course)
-        {
-            if (ModelState.IsValid)
-            {
-                course.CourseId = Courses.Count + 1;
-                Courses.Add(course);
-                return RedirectToAction("Index");
-            }
-            return View(course);
-        }
- 
- 
-        [Route("")]
-        [HttpGet]
-        public IActionResult IndexDbContext()
-        {
-            var courseList = _context.Courses.Include(c => c.Instructor).ToList();
-            return View(courseList);
-        }
- 
- 
-        [Route("create")]
-        [HttpGet]
-        public IActionResult CreateDbContext()
-        {
-            ViewBag.Instructors = new SelectList(_context.Instructors.ToList(), "InstructorId", "Name");
-            return View();
-        }
- 
- 
-        [Route("")]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult CreateDbContext(Course course)
-        {
- 
-            if (ModelState.IsValid)
-            {
-                _context.Courses.Add(course);
-                _context.SaveChanges();
-                return RedirectToAction(nameof(IndexDbContext));
-            }
-            ViewBag.Instructors = new SelectList(_context.Instructors.ToList(), "InstructorId", "Name", course.InstructorId);
-            return View(course);
-        }
- 
- 
- 
-        [HttpGet("edit/{id?}")]
-        [HttpGet("/Course/EditDbContext/{id?}")]
-        public IActionResult EditDbContext(int id)
-        {
-            var course = _context.Courses.FirstOrDefault(c => c.CourseId == id);
-            if (course == null)
-            {
-                return NotFound();
-            }
-            ViewBag.Instructors = new SelectList(_context.Instructors.ToList(), "InstructorId", "Name", course.InstructorId);
-            return View(course);
-        }
- 
-        [HttpPost("edit/{id?}")]
-        [HttpPost("/Course/EditDbContext/{id?}")]
-        [ValidateAntiForgeryToken]
-        public IActionResult EditDbContext(int id,Course course)
-        {
-            if(id !=course.CourseId){
-                return NotFound();
-            }
-            if(ModelState.IsValid){
-                _context.Courses.Update(course);
-                _context.SaveChanges();
-                return RedirectToAction(nameof(IndexDbContext));
-            }
- 
-            ViewBag.Instructors = new SelectList(_context.Instructors.ToList(), "InstructorId", "Name", course.InstructorId);
-            return View(course);
-        }
- 
- 
- 
- 
-        [HttpGet("delete/{id?}")]
-        [HttpGet("/Course/DeleteDbContext/{id?}")]
-        public IActionResult DeleteDbContext(int id)
-        {
-            var course = _context.Courses.Include(c => c.Instructor).FirstOrDefault(c => c.CourseId == id);
-            if (course == null)
-            {
-                return NotFound();
-            }
- 
-            return View(course);
-        }
- 
- 
- 
- 
-        [HttpPost("delete/{id?}")]
-        [HttpPost("/Course/DeleteDbContext/{id?}")]
-        [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmedDbContext(int id)
-        {
-            var course = _context.Courses.FirstOrDefault(c => c.CourseId == id);
-            if (course != null)
-            {
-                _context.Courses.Remove(course);
-                _context.SaveChanges();
-            }
- 
-            return RedirectToAction(nameof(IndexDbContext));
-        }
+  saveEditedCourse(): void {
+    if (this.editedCourse && this.editedCourse.CourseId) {
+      this.courseService
+        .updateCourse(this.editedCourse.CourseId, this.editedCourse)
+        .subscribe(() => {
+          this.getCourses();
+          this.editedCourse = null;
+        });
     }
+  }
+ 
+  cancelEditCourse(): void {
+    this.editedCourse = null;
+  }
+ 
+  deleteCourse(courseId: number): void {
+    this.courseService.deleteCourse(courseId).subscribe(() => {
+      this.getCourses();
+    });
+  }
 }
  
-using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
-using dotnetapp.Models;
- 
-namespace dotnetapp.Controllers
-{
-    public class HomeController : Controller
-    {
-        private readonly ILogger<HomeController> _logger;
- 
-        public HomeController(ILogger<HomeController> logger)
-        {
-            _logger = logger;
-        }
- 
-        public IActionResult Index()
-        {
-            return View();
-        }
- 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
- 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-    }
-}
- 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using dotnetapp.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
- 
-namespace dotnetapp.Controllers
-{
-   
-    [Route("instructors")]
-    public class InstructorController : Controller
-    {
-        private readonly ApplicationDbContext _context;
- 
-        public InstructorController(ApplicationDbContext context){
-            _context=context;
-        }
- 
-        [Route("")]
-        [HttpGet]
-        public IActionResult Index()
-        {
-            var instructors=_context.Instructors.ToList();
- 
-            return View(instructors);
-        }
- 
-        [Route("create")]
-        [HttpGet]
-        public IActionResult Create()
-        {
-            return View();
-        }
- 
-        [Route("create")]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(Instructor instructor)
-        {
-            if(ModelState.IsValid){
-                _context.Instructors.Add(instructor);
-                _context.SaveChanges();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(instructor);
-        }
- 
-       
-    }
-}
- 
- 
- 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
- 
- 
-namespace dotnetapp.Models
-{
-     public class ApplicationDbContext : DbContext
-    {
-        public ApplicationDbContext (DbContextOptions<ApplicationDbContext>options):base (options){
- 
-        }
-        public DbSet<Course >Courses{get;set;}
-        public DbSet<Instructor>Instructors{get;set;}
-    }
-}
- 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
- 
-namespace dotnetapp.Models
-{
-    public class Course
-    {
-        [Key]
-        public int CourseId{get;set;}
-        [Required(ErrorMessage="Title is required.")]
-        public string? Title{get;set;}
-        [Required(ErrorMessage="Description is required.")]
-        public string? Description{get;set;}
-        [Required(ErrorMessage="Duration is required.")]
-        [Range(9,int.MaxValue,ErrorMessage="Duration must be greater than 8 hours.")]
-        public int Duration{get;set;}
- 
-        [Display(Name="Instructor Name")]
-        public int InstructorId{get;set;}
- 
-        [ForeignKey("InstructorId")]
-        public Instructor? Instructor{get;set;}
- 
-    }
-}
- 
-namespace dotnetapp.Models
-{
-    public class ErrorViewModel
-    {
-        public string? RequestId { get; set; }
- 
-        public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
-    }
-}
- 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations;
-namespace dotnetapp.Models
-{
-    public class Instructor
-    {
-        [Key]
-        public int InstructorId{get;set;}
-        [Required(ErrorMessage="Name is required.")]
-        public String? Name { get; set; }
-        [Required(ErrorMessage="Email is required.")]
-        [EmailAddress]
-        public string? Email { get; set; }
-        [DataType(DataType.Date)]
-        public DateTime HireDate { get; set; }
- 
-        public ICollection<Course>?Courses{get;set;}
-    }
-}
- 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
- 
-namespace dotnetapp.Models
-{
-    public class LoginViewModel
-    {
-        [Required]
-        public string? Email { get; set; }
-        [Required]
-        [DataType(DataType.Password)]
-        public string? Password { get; set; }
- 
-    }
-}
- 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
- 
-namespace dotnetapp.Models
-{
-    public class RegisterViewModel
-    {
-        [Required]
-        public string? Email { get; set; }
-        [Required]
-        [DataType(DataType.Password)]
-        public string ? Password{ get; set; }
-        [Required]
-        [DataType(DataType.Password)]
-        [Compare("Password",ErrorMessage="Password and ConfrimPassword must match.")]
-        public string? ConfrimPassword { get; set; }
-       
-    }
-}
- 
-@model dotnetapp.Models.LoginViewModel;
- 
-<h2>Login</h2>
- 
-<form method="post">
-    <input asp-for="Email"/>
-    <input asp-for="Password"/>
-    <button type="submit">Login</button>
-</form>
- 
-@model dotnetapp.Models.RegisterViewModel
- 
-<h2>Register</h2>
- 
-<form asp-action="Register" method="post">
- 
-    @*<label>Email</Email>*@
-    <input type="text" id="Email" name="Email"/>
- 
-     @*<label>Password</Email>*@
-    <input type="password" id="Password" name="Password"/>
- 
-     @*<label>Confirm Password</Email>*@
-    <input type="password" id="ConfirmPassword" name="ConfirmPassword"/>
- 
-    <button type="submit">Register</button>
- 
- 
-</form>
- 
-@model dotnetapp.Models.Course
- 
-<form asp-action="Edit" method="post">
-    <input asp-for="CourseId" type="hidden"/>
- 
-    <label asp-for="Title"></label>
-    <input asp-for="Title">
- 
-    <label asp-for="Description"></label>
-    <input asp-for="Description">
- 
-    <label asp-for="Duration"></label>
-    <input asp-for="Duration">
- 
-    <label asp-for="InstructorId"></label>
-    <input asp-for="InstructorId">
- 
- 
- 
-    <button type="submit">Save</button>
-</form>
- 
-@model dotnetapp.Models.Course
- 
-<h2>Edit Course</h2>
- 
-<form asp-action="Edit" method="post">
-    <input asp-for="CourseId" type="hidden"/>
- 
-    <label asp-for="Title"></label>
-    <input asp-for="Title">
- 
-    <label asp-for="Description"></label>
-    <input asp-for="Description">
- 
-    <label asp-for="Duration"></label>
-    <input asp-for="Duration">
- 
-    <label asp-for="InstructorId"></label>
-    <input asp-for="InstructorId">
- 
- 
- 
-    <button type="submit">Save</button>
-</form>
- 
-@{
-    ViewData["Title"] = "Home Page";
-}
- 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+html
+-------
+ 
+<div class="admin-container">
+  <h1>Admin Panel</h1>
+ 
+  <app-instructor
+    [instructors]="instructors"
+    [editedInstructor]="editedInstructor"
+    (editInstructorEvent)="editInstructor($event)"
+    (saveEditedInstructorEvent)="saveEditedInstructor()"
+    (cancelEditInstructorEvent)="cancelEditInstructor()"
+    (deleteInstructorEvent)="deleteInstructor($event)">
+  </app-instructor>
+ 
+  <app-course
+    [courses]="courses"
+    [editedCourse]="editedCourse"
+    (editCourseEvent)="editCourse($event)"
+    (saveEditedCourseEvent)="saveEditedCourse()"
+    (cancelEditCourseEvent)="cancelEditCourse()"
+    (deleteCourseEvent)="deleteCourse($event)">
+  </app-course>
 </div>
  
-ASP.NET documentation | Microsoft Learn
-Learn to use ASP.NET Core to create web apps and services that are fast, secure, cross-platform, and cloud-based. Browse tutorials, sample code, fundamentals, API reference and more.
+course
  
-@{
-    ViewData["Title"] = "Privacy Policy";
-}
-<h1>@ViewData["Title"]</h1>
+ts
+----
  
-<p>Use this page to detail your site's privacy policy.</p>
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Course } from '../../models/course.model';
  
+@Component({
+  selector: 'app-course',
+  templateUrl: './course.component.html',
+  styleUrls: ['./course.component.css']
+})
+export class CourseComponent {
  
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Mvc;
-using dotnetapp.Models;
+  @Input() courses: Course[] = [];
+  @Input() editedCourse: Course | null = null;
  
-var builder = WebApplication.CreateBuilder(args);
+  @Output() editCourseEvent = new EventEmitter<Course>();
+  @Output() saveEditedCourseEvent = new EventEmitter<void>();
+  @Output() cancelEditCourseEvent = new EventEmitter<void>();
+  @Output() deleteCourseEvent = new EventEmitter<number>();
  
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+  onEditCourse(course: Course): void {
+    this.editCourseEvent.emit(course);
+  }
  
-// Add your DbContext and Identity services
-// ...
-var cs = "User ID=sa; password=examlyMssql@123;server=localhost;Database=appdb;trusted_connection=false;Persist Security Info=False;Encrypt=False";
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(cs));
+  onSaveEditedCourse(): void {
+    this.saveEditedCourseEvent.emit();
+  }
  
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-.AddEntityFrameworkStores<ApplicationDbContext>()
-.AddDefaultTokenProviders();
-var app = builder.Build();
+  onCancelEditCourse(): void {
+    this.cancelEditCourseEvent.emit();
+  }
  
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios.
-    app.UseHsts();
-}
+  onDeleteCourse(courseId: number): void {
+    this.deleteCourseEvent.emit(courseId);
+  }
  
-app.UseHttpsRedirection();
-app.UseStaticFiles();
- 
-app.UseRouting();
- 
-app.UseAuthorization();
- 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Account}/{action=Register}/{id?}");
- 
-app.Run();
- 
- 
- 
-{
-  "iisSettings": {
-    "windowsAuthentication": false,
-    "anonymousAuthentication": true,
-    "iisExpress": {
-      "applicationUrl": "http://localhost:20714",
-      "sslPort": 44331
-    }
-  },
-  "profiles": {
-    "dotnetapp": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "applicationUrl": "http://0.0.0.0:8081",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
-    "IIS Express": {
-      "commandName": "IISExpress",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+  getDurationStatus(): string {
+    if (!this.editedCourse || !this.editedCourse.Duration || this.editedCourse.Duration === 0) {
+      return 'Undefined';
+    } else if (this.editedCourse.Duration < 10) {
+      return 'Short Duration';
+    } else if (this.editedCourse.Duration >= 10 && this.editedCourse.Duration <= 30) {
+      return 'Moderate Duration';
+    } else {
+      return 'Long Duration';
     }
   }
 }
  
+ 
+html
+-------
+<div>
+  <h2>Course List</h2>
+ 
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Description</th>
+        <th>Duration</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+ 
+    <tbody>
+      <tr *ngFor="let course of courses">
+        <td>{{ course.Title }}</td>
+        <td>{{ course.Description }}</td>
+        <td>{{ course.Duration }} days</td>
+        <td>
+          <button (click)="onEditCourse(course)">Edit</button>
+          <button (click)="onDeleteCourse(course.CourseId!)">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+ 
+  <div *ngIf="editedCourse">
+    <h2>Edit Course</h2>
+ 
+    <label>Title:</label>
+    <input type="text" [(ngModel)]="editedCourse.Title">
+ 
+    <label>Description:</label>
+    <textarea [(ngModel)]="editedCourse.Description"></textarea>
+ 
+    <label>Duration (in days):</label>
+    <input type="number" [(ngModel)]="editedCourse.Duration">
+ 
+    <div>
+      Duration Status: {{ getDurationStatus() }}
+    </div>
+ 
+    <button (click)="onSaveEditedCourse()">Save</button>
+    <button (click)="onCancelEditCourse()">Cancel</button>
+  </div>
+ 
+</div>
+ 
+homecomponent
+ 
+ts
+----
+ 
+import { Component } from '@angular/core';
+ 
+@Component({
+  selector: 'app-home',
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.css']
+})
+export class HomeComponent {
+ 
+}
+ 
+ 
+html:
+-------
+<div class="home-container">
+ 
+    <h1>Welcome to Course-Instructor Management System</h1>
+ 
+    <p>Please Login or Register to continue.</p>
+ 
+</div>
+ 
+ 
+ 
+ 
+instructor:
+ 
+ts
+----
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Instructor } from '../../models/instructor.model';
+ 
+@Component({
+  selector: 'app-instructor',
+  templateUrl: './instructor.component.html',
+  styleUrls: ['./instructor.component.css']
+})
+export class InstructorComponent {
+ 
+  @Input() instructors: Instructor[] = [];
+  @Input() editedInstructor: Instructor | null = null;
+ 
+  @Output() editInstructorEvent = new EventEmitter<Instructor>();
+  @Output() saveEditedInstructorEvent = new EventEmitter<void>();
+  @Output() cancelEditInstructorEvent = new EventEmitter<void>();
+  @Output() deleteInstructorEvent = new EventEmitter<number>();
+ 
+  onEditInstructor(instructor: Instructor): void {
+    this.editInstructorEvent.emit(instructor);
+  }
+ 
+  onSaveEditedInstructor(): void {
+    this.saveEditedInstructorEvent.emit();
+  }
+ 
+  onCancelEditInstructor(): void {
+    this.cancelEditInstructorEvent.emit();
+  }
+ 
+  onDeleteInstructor(instructorId: number): void {
+    this.deleteInstructorEvent.emit(instructorId);
+  }
+ 
+  onHireDateChange(date: string): void {
+    if (this.editedInstructor) {
+      this.editedInstructor.HireDate = new Date(date);
+    }
+  }
+}
+ 
+ 
+html:
+-------
+ 
+<div>
+  <h2>Instructor List</h2>
+ 
+  <table>
+    <thead>
+      <tr>
+        <th>Instructor Name</th>
+        <th>Email</th>
+        <th>Hire Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+ 
+    <tbody>
+      <tr *ngFor="let instructor of instructors">
+        <td>{{ instructor.Name }}</td>
+        <td>{{ instructor.Email }}</td>
+        <td>{{ instructor.HireDate | date }}</td>
+        <td>
+          <button (click)="onEditInstructor(instructor)">Edit</button>
+          <button (click)="onDeleteInstructor(instructor.InstructorId!)">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+ 
+  <div *ngIf="editedInstructor">
+    <h2>Edit Instructor</h2>
+ 
+    <label>Instructor Name:</label>
+    <input type="text" [(ngModel)]="editedInstructor.Name">
+ 
+    <label>Email:</label>
+    <input type="email" [(ngModel)]="editedInstructor.Email">
+ 
+    <label>Hire Date:</label>
+    <input
+      type="date"
+      [ngModel]="editedInstructor.HireDate | date:'yyyy-MM-dd'"
+      (ngModelChange)="onHireDateChange($event)">
+ 
+    <button (click)="onSaveEditedInstructor()">Save</button>
+    <button (click)="onCancelEditInstructor()">Cancel</button>
+  </div>
+</div>
+ 
+ 
+organizer:
+ 
+ts
+----
+ 
+import { Component, OnInit } from '@angular/core';
+import { Course } from '../../models/course.model';
+import { Instructor } from '../../models/instructor.model';
+import { CourseService } from '../services/course.service';
+import { InstructorService } from '../services/instructor.service';
+ 
+@Component({
+  selector: 'app-organizer',
+  templateUrl: './organizer.component.html',
+  styleUrls: ['./organizer.component.css']
+})
+export class OrganizerComponent implements OnInit {
+ 
+  courses: Course[] = [];
+  unassignedCourses: Course[] = [];
+  instructors: Instructor[] = [];
+ 
+  selectedInstructorIds: { [courseId: number]: number } = {};
+ 
+  constructor(
+    private courseService: CourseService,
+    private instructorService: InstructorService
+  ) { }
+ 
+  ngOnInit(): void {
+    this.getCourses();
+    this.getInstructors();
+  }
+ 
+  getCourses(): void {
+    this.courseService.getCourses().subscribe(data => {
+      this.courses = data;
+      this.unassignedCourses = this.courses.filter(course => !course.InstructorId);
+    });
+  }
+ 
+  getInstructors(): void {
+    this.instructorService.getInstructors().subscribe(data => {
+      this.instructors = data;
+    });
+  }
+ 
+  assignCourseToInstructor(course: Course, selectedInstructorId: number): void {
+    const updatedCourse: any = {
+      ...course,
+      InstructorId: selectedInstructorId,
+      Instructor: null
+    };
+ 
+    this.courseService.updateCourse(course.CourseId!, updatedCourse).subscribe(() => {
+      this.getCourses();
+      this.getInstructors();
+    });
+  }
+ 
+  releaseCourseFromInstructor(course: Course, selectedInstructorId: number): void {
+    const updatedCourse: any = {
+      ...course,
+      InstructorId: null,
+      Instructor: null
+    };
+ 
+    this.courseService.updateCourse(course.CourseId!, updatedCourse).subscribe(() => {
+      this.getCourses();
+      this.getInstructors();
+    });
+  }
+}
+ 
+ 
+html
+-------
+<div class="organizer-container">
+ 
+  <h1>INSTRUCTOR-COURSE ASSIGNMENT PANEL</h1>
+ 
+  <h2>Unassigned Courses</h2>
+ 
+  <p id="no_unassigned" *ngIf="unassignedCourses.length === 0">
+    No Unassigned Courses
+  </p>
+ 
+  <table class="table table-bordered" *ngIf="unassignedCourses.length > 0">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Description</th>
+        <th>Duration</th>
+        <th>Instructor</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+ 
+    <tbody>
+      <tr *ngFor="let course of unassignedCourses">
+        <td>{{ course.Title }}</td>
+        <td>{{ course.Description }}</td>
+        <td>{{ course.Duration }} days</td>
+ 
+        <td>
+          <select
+            class="form-control"
+            name="instructor{{ course.CourseId }}"
+            [(ngModel)]="selectedInstructorIds[course.CourseId!]">
+ 
+            <option [ngValue]="undefined">Select Instructor</option>
+ 
+            <option
+              *ngFor="let instructor of instructors"
+              [ngValue]="instructor.InstructorId">
+ 
+              {{ instructor.Name }} ({{ instructor.Email }})
+            </option>
+ 
+          </select>
+        </td>
+ 
+        <td>
+          <button
+            class="btn btn-success"
+            (click)="assignCourseToInstructor(course, selectedInstructorIds[course.CourseId!])">
+            Assign to Instructor
+          </button>
+        </td>
+ 
+      </tr>
+    </tbody>
+  </table>
+ 
+  <h2>Instructor List With Courses</h2>
+ 
+  <p id="no_instructors" *ngIf="instructors.length === 0">
+    No Instructors Available
+  </p>
+ 
+  <table class="table table-bordered" *ngIf="instructors.length > 0">
+    <thead>
+      <tr>
+        <th>Instructor Name</th>
+        <th>Email</th>
+        <th>Courses</th>
+      </tr>
+    </thead>
+ 
+    <tbody>
+      <tr *ngFor="let instructor of instructors">
+        <td>{{ instructor.Name }}</td>
+        <td>{{ instructor.Email }}</td>
+ 
+        <td>
+          <table class="table">
+            <tbody>
+              <tr *ngFor="let course of instructor.Courses">
+                <td>{{ course.Title }}</td>
+                <td>{{ course.Duration }} days</td>
+                <td>
+                  <button
+                    class="btn btn-success"
+                    (click)="releaseCourseFromInstructor(course, instructor.InstructorId!)">
+                    Release Course
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+ 
+      </tr>
+    </tbody>
+  </table>
+ 
+</div>
  
