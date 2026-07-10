@@ -1309,5 +1309,197 @@ const routes: Routes = [
 })
 export class AppRoutingModule { }
 
-
+program.cs
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
+using dotnetapp.Models;
+ 
+var builder = WebApplication.CreateBuilder(args);
+ 
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
+ 
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+ 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+ 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+ 
+builder.WebHost.UseUrls("http://0.0.0.0:8080");
+ 
+var app = builder.Build();
+ 
+app.UseCors("AllowAll");
+ 
+app.UseSwagger();
+app.UseSwaggerUI();
+ 
+app.UseAuthorization();
+app.MapControllers();
+ 
+app.Run();
+ 
+ 
+ 
+ 
+ 
+ 
+style.css
+ 
+@import url('https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css');
+ 
+body {
+    background-color: #f8f9fa;
+    font-family: Arial, sans-serif;
+}
+ 
+ 
+.navbar {
+    background-color: #0d6efd;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.navbar .brand {
+    color: white;
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+}
+.nav-links li a {
+    color: white;
+    text-decoration: none;
+}
+.nav-links li a:hover {
+    text-decoration: underline;
+}
+ 
+ 
+.login-container, .registration-container, .create-course-container, .create-instructor-container {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    max-width: 500px;
+    margin: 3rem auto;
+}
+ 
+ 
+.home-container, .admin-container, .organizer-container {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    max-width: 900px;
+    margin: 3rem auto;
+    text-align: center;
+}
+ 
+ 
+h2 {
+    color: #0d6efd;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-weight: bold;
+}
+h3 {
+    color: #0d6efd;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+label {
+    font-weight: bold;
+    margin-top: 10px;
+    display: block;
+    text-align: left;
+}
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+ 
+ 
+button {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 15px;
+    font-weight: bold;
+}
+button:disabled {
+    background-color: #a0c4ff;
+    cursor: not-allowed;
+}
+ 
+ 
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+th {
+    background-color: #0d6efd;
+    color: white;
+    padding: 12px;
+}
+td {
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+ 
+ 
+.edit-btn {
+    background-color: #198754;
+    width: auto;
+    margin: 0 5px 0 0;
+    padding: 5px 10px;
+}
+.delete-btn {
+    background-color: #dc3545;
+    width: auto;
+    margin: 0;
+    padding: 5px 10px;
+}
+ 
+ 
+.error-message {
+    color: #dc3545;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+    text-align: left;
+    font-style: italic;
+}
+ 
+ 
 
