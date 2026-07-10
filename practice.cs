@@ -1,618 +1,499 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using dotnetapp.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
- 
-namespace dotnetapp.Controllers
-{
- 
-    public class AccountController : Controller
-    {
-        private readonly UserManager <IdentityUser> _userManager;
-        private readonly SignInManager <IdentityUser> _signInManager;
-       
-        public AccountController(UserManager<IdentityUser>userManager,SignInManager<IdentityUser>signInManager){
-            _userManager=userManager;
-            _signInManager=signInManager;
-        }
- 
-        [HttpGet]
-        public IActionResult Register()
-        {
-            return View();
-        }
- 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register (RegisterViewModel model){
-            if(ModelState.IsValid){
-                IdentityUser user=new IdentityUser{
-                    UserName=model.Email,
-                    Email=model.Email
-                };
-                var result=await _userManager.CreateAsync(user,model.Password);
-                if(result.Succeeded){
-                    await _signInManager.SignInAsync(user, isPersistent: true);
-                    return RedirectToAction("Index","Instructor");
-                }
-                foreach(var error in result.Errors){
-                    ModelState.AddModelError("",error.Description);
-                }  
- 
-            }
-            return View(model);
-        }
- 
-        [HttpGet]
-        // [ValidateAntiForgeryToken]
-         public async Task<IActionResult> Login (LoginViewModel model){
-            if(ModelState.IsValid){
-               
-               
-                var result=await _signInManager.PasswordSignInAsync(
-                    model.Email!,model.Password!,true,false);
- 
-                if(result.Succeeded){
-                   
-                    return RedirectToAction("Index","Instructor");
-                }
-                ModelState.AddModelError("","Invalid login attempt.");  
- 
-            }
-            return View(model);
-        }
- 
-        [HttpGet]
-        public async Task<IActionResult>Logout(){
-            await _signInManager.SignOutAsync();
-            return RedirectToAction("Login","Account");
- 
-        }
- 
- 
-    }
-}
- 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using dotnetapp.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
- 
-namespace dotnetapp.Controllers
-{
-    [Route("courses")]
-    public class CourseController : Controller
-    {
-        private readonly ApplicationDbContext _context;
-        private static List<Course> Courses = new List<Course>();
-        public CourseController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
- 
-        [HttpGet("Index")]
-        public IActionResult Index()
-        {
-            return View(Courses);
-        }
- 
-        [HttpGet("Create")]
-        public IActionResult Create()
-        {
-            return View();
-        }
- 
-        [HttpPost("Create")]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(Course course)
-        {
-            if (ModelState.IsValid)
-            {
-                course.CourseId = Courses.Count + 1;
-                Courses.Add(course);
-                return RedirectToAction("Index");
-            }
-            return View(course);
-        }
- 
- 
-        [Route("")]
-        [HttpGet]
-        public IActionResult IndexDbContext()
-        {
-            var courseList = _context.Courses.Include(c => c.Instructor).ToList();
-            return View(courseList);
-        }
- 
- 
-        [Route("create")]
-        [HttpGet]
-        public IActionResult CreateDbContext()
-        {
-            ViewBag.Instructors = new SelectList(_context.Instructors.ToList(), "InstructorId", "Name");
-            return View();
-        }
- 
- 
-        [Route("")]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult CreateDbContext(Course course)
-        {
- 
-            if (ModelState.IsValid)
-            {
-                _context.Courses.Add(course);
-                _context.SaveChanges();
-                return RedirectToAction(nameof(IndexDbContext));
-            }
-            ViewBag.Instructors = new SelectList(_context.Instructors.ToList(), "InstructorId", "Name", course.InstructorId);
-            return View(course);
-        }
- 
- 
- 
-        [HttpGet("edit/{id?}")]
-        [HttpGet("/Course/EditDbContext/{id?}")]
-        public IActionResult EditDbContext(int id)
-        {
-            var course = _context.Courses.FirstOrDefault(c => c.CourseId == id);
-            if (course == null)
-            {
-                return NotFound();
-            }
-            ViewBag.Instructors = new SelectList(_context.Instructors.ToList(), "InstructorId", "Name", course.InstructorId);
-            return View(course);
-        }
- 
-        [HttpPost("edit/{id?}")]
-        [HttpPost("/Course/EditDbContext/{id?}")]
-        [ValidateAntiForgeryToken]
-        public IActionResult EditDbContext(int id,Course course)
-        {
-            if(id !=course.CourseId){
-                return NotFound();
-            }
-            if(ModelState.IsValid){
-                _context.Courses.Update(course);
-                _context.SaveChanges();
-                return RedirectToAction(nameof(IndexDbContext));
-            }
- 
-            ViewBag.Instructors = new SelectList(_context.Instructors.ToList(), "InstructorId", "Name", course.InstructorId);
-            return View(course);
-        }
- 
- 
- 
- 
-        [HttpGet("delete/{id?}")]
-        [HttpGet("/Course/DeleteDbContext/{id?}")]
-        public IActionResult DeleteDbContext(int id)
-        {
-            var course = _context.Courses.Include(c => c.Instructor).FirstOrDefault(c => c.CourseId == id);
-            if (course == null)
-            {
-                return NotFound();
-            }
- 
-            return View(course);
-        }
- 
- 
- 
- 
-        [HttpPost("delete/{id?}")]
-        [HttpPost("/Course/DeleteDbContext/{id?}")]
-        [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmedDbContext(int id)
-        {
-            var course = _context.Courses.FirstOrDefault(c => c.CourseId == id);
-            if (course != null)
-            {
-                _context.Courses.Remove(course);
-                _context.SaveChanges();
-            }
- 
-            return RedirectToAction(nameof(IndexDbContext));
-        }
-    }
-}
- 
-using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
-using dotnetapp.Models;
- 
-namespace dotnetapp.Controllers
-{
-    public class HomeController : Controller
-    {
-        private readonly ILogger<HomeController> _logger;
- 
-        public HomeController(ILogger<HomeController> logger)
-        {
-            _logger = logger;
-        }
- 
-        public IActionResult Index()
-        {
-            return View();
-        }
- 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
- 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-    }
-}
- 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using dotnetapp.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
- 
-namespace dotnetapp.Controllers
-{
-   
-    [Route("instructors")]
-    public class InstructorController : Controller
-    {
-        private readonly ApplicationDbContext _context;
- 
-        public InstructorController(ApplicationDbContext context){
-            _context=context;
-        }
- 
-        [Route("")]
-        [HttpGet]
-        public IActionResult Index()
-        {
-            var instructors=_context.Instructors.ToList();
- 
-            return View(instructors);
-        }
- 
-        [Route("create")]
-        [HttpGet]
-        public IActionResult Create()
-        {
-            return View();
-        }
- 
-        [Route("create")]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(Instructor instructor)
-        {
-            if(ModelState.IsValid){
-                _context.Instructors.Add(instructor);
-                _context.SaveChanges();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(instructor);
-        }
- 
-       
-    }
-}
- 
- 
- 
+dotnetapp:-
+
+models:
+
+course model:-
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
- 
- 
-namespace dotnetapp.Models
-{
-     public class ApplicationDbContext : DbContext
-    {
-        public ApplicationDbContext (DbContextOptions<ApplicationDbContext>options):base (options){
- 
-        }
-        public DbSet<Course >Courses{get;set;}
-        public DbSet<Instructor>Instructors{get;set;}
-    }
-}
- 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
- 
+
 namespace dotnetapp.Models
 {
     public class Course
     {
-        [Key]
-        public int CourseId{get;set;}
-        [Required(ErrorMessage="Title is required.")]
-        public string? Title{get;set;}
-        [Required(ErrorMessage="Description is required.")]
-        public string? Description{get;set;}
-        [Required(ErrorMessage="Duration is required.")]
-        [Range(9,int.MaxValue,ErrorMessage="Duration must be greater than 8 hours.")]
-        public int Duration{get;set;}
- 
-        [Display(Name="Instructor Name")]
-        public int InstructorId{get;set;}
- 
-        [ForeignKey("InstructorId")]
-        public Instructor? Instructor{get;set;}
- 
+        public int CourseId {get;set;}
+
+        public string Title {get;set;}
+
+        public string Description {get;set;}
+
+        public int Duration {get;set;}
+    
+        public int? InstructorId {get;set;}
+
+        [JsonIgnore]
+        public Instructor? Instructor {get;set;}
+
     }
 }
- 
-namespace dotnetapp.Models
-{
-    public class ErrorViewModel
-    {
-        public string? RequestId { get; set; }
- 
-        public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
-    }
-}
- 
+
+---------------
+
+instructor:-
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations;
+
 namespace dotnetapp.Models
 {
     public class Instructor
     {
-        [Key]
         public int InstructorId{get;set;}
-        [Required(ErrorMessage="Name is required.")]
-        public String? Name { get; set; }
-        [Required(ErrorMessage="Email is required.")]
-        [EmailAddress]
-        public string? Email { get; set; }
-        [DataType(DataType.Date)]
-        public DateTime HireDate { get; set; }
- 
-        public ICollection<Course>?Courses{get;set;}
+
+        public string Name{get;set;}
+
+        public string Email {get;set;}
+
+        public DateTime HireDate {get;set;}
+
+        [JsonIgnore]
+        public ICollection<Course> Courses{get;set;} = new List<Course>();
     }
 }
- 
+
+------------------
+
+ApplicationDbContext:-
+
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
- 
-namespace dotnetapp.Models
-{
-    public class LoginViewModel
-    {
-        [Required]
-        public string? Email { get; set; }
-        [Required]
-        [DataType(DataType.Password)]
-        public string? Password { get; set; }
- 
-    }
-}
- 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
- 
-namespace dotnetapp.Models
-{
-    public class RegisterViewModel
-    {
-        [Required]
-        public string? Email { get; set; }
-        [Required]
-        [DataType(DataType.Password)]
-        public string ? Password{ get; set; }
-        [Required]
-        [DataType(DataType.Password)]
-        [Compare("Password",ErrorMessage="Password and ConfrimPassword must match.")]
-        public string? ConfrimPassword { get; set; }
-       
-    }
-}
- 
-@model dotnetapp.Models.LoginViewModel;
- 
-<h2>Login</h2>
- 
-<form method="post">
-    <input asp-for="Email"/>
-    <input asp-for="Password"/>
-    <button type="submit">Login</button>
-</form>
- 
-@model dotnetapp.Models.RegisterViewModel
- 
-<h2>Register</h2>
- 
-<form asp-action="Register" method="post">
- 
-    @*<label>Email</Email>*@
-    <input type="text" id="Email" name="Email"/>
- 
-     @*<label>Password</Email>*@
-    <input type="password" id="Password" name="Password"/>
- 
-     @*<label>Confirm Password</Email>*@
-    <input type="password" id="ConfirmPassword" name="ConfirmPassword"/>
- 
-    <button type="submit">Register</button>
- 
- 
-</form>
- 
-@model dotnetapp.Models.Course
- 
-<form asp-action="Edit" method="post">
-    <input asp-for="CourseId" type="hidden"/>
- 
-    <label asp-for="Title"></label>
-    <input asp-for="Title">
- 
-    <label asp-for="Description"></label>
-    <input asp-for="Description">
- 
-    <label asp-for="Duration"></label>
-    <input asp-for="Duration">
- 
-    <label asp-for="InstructorId"></label>
-    <input asp-for="InstructorId">
- 
- 
- 
-    <button type="submit">Save</button>
-</form>
- 
-@model dotnetapp.Models.Course
- 
-<h2>Edit Course</h2>
- 
-<form asp-action="Edit" method="post">
-    <input asp-for="CourseId" type="hidden"/>
- 
-    <label asp-for="Title"></label>
-    <input asp-for="Title">
- 
-    <label asp-for="Description"></label>
-    <input asp-for="Description">
- 
-    <label asp-for="Duration"></label>
-    <input asp-for="Duration">
- 
-    <label asp-for="InstructorId"></label>
-    <input asp-for="InstructorId">
- 
- 
- 
-    <button type="submit">Save</button>
-</form>
- 
-@{
-    ViewData["Title"] = "Home Page";
-}
- 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
- 
-ASP.NET documentation | Microsoft Learn
-Learn to use ASP.NET Core to create web apps and services that are fast, secure, cross-platform, and cloud-based. Browse tutorials, sample code, fundamentals, API reference and more.
- 
-@{
-    ViewData["Title"] = "Privacy Policy";
-}
-<h1>@ViewData["Title"]</h1>
- 
-<p>Use this page to detail your site's privacy policy.</p>
- 
- 
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Mvc;
-using dotnetapp.Models;
- 
-var builder = WebApplication.CreateBuilder(args);
- 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
- 
-// Add your DbContext and Identity services
-// ...
-var cs = "User ID=sa; password=examlyMssql@123;server=localhost;Database=appdb;trusted_connection=false;Persist Security Info=False;Encrypt=False";
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(cs));
- 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-.AddEntityFrameworkStores<ApplicationDbContext>()
-.AddDefaultTokenProviders();
-var app = builder.Build();
- 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+
+namespace dotnetapp.Models
 {
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios.
-    app.UseHsts();
+    public class ApplicationDbContext : DbContext
+    {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options): base(options){
+
+        }
+
+        public DbSet<Course> Courses{get;set;}
+
+        public DbSet<Instructor> Instructors {get;set;}
+
+        public DbSet<User> Users {get;set;}
+
+        protected override void OnModelCreating(ModelBuilder m)
+        {
+            
+            m.Entity<Instructor>()
+            .HasMany(s=>s.Courses)
+            .WithOne(c=>c.Instructor)
+            .HasForeignKey(fk=>fk.InstructorId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        }
+
+        
+    }
 }
- 
+
+---------------------
+
+User:-
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace dotnetapp.Models
+{
+    public class User
+    {
+        public long Id {get;set;}
+
+        public string Username {get;set;}
+
+        public string Password {get;set;}
+
+        public string Role {get;set;}
+    }
+}
+
+--------------------
+LoginModel:-
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace dotnetapp.Models
+{
+    public class LoginModel
+    {
+        public string Username {get;set;}
+
+        public string Password{get;set;}
+    }
+}
+
+------------------------------
+
+Controller:-
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using dotnetapp.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace dotnetapp.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class CourseController : ControllerBase
+    {
+        private readonly ApplicationDbContext db;
+
+        public CourseController(ApplicationDbContext db1)
+        {
+            db = db1;
+        }
+
+        [HttpGet("GetCourses")]
+        public async Task<ActionResult<IEnumerable<Course>>> GetCourses()
+        {
+
+            try
+            {
+                var res = await db.Courses.Include(i => i.Instructor).ToListAsync();
+
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("PostCourse")]
+        public async Task<ActionResult<Course>> PostCourse(Course course)
+        {
+            try
+            {
+                db.Courses.Add(course);
+                await db.SaveChangesAsync();
+                return CreatedAtAction(nameof(GetCourses), new {id = course.CourseId}, course);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("PutCourse/{id}")]
+        public async Task<IActionResult> PutCourse(int id, Course course)
+        {
+            if (id != course.CourseId)
+            {
+                return BadRequest(new { message = "Course ID mismatch." });
+            }
+
+            var existing = await db.Courses.FindAsync(id);
+
+            if (existing == null)
+            {
+                return NotFound(new { message = "Course not found." });
+            }
+
+            try
+            {
+                existing.Title = course.Title;
+                existing.Description = course.Description;
+                existing.Duration = course.Duration;
+                existing.InstructorId = course.InstructorId;
+
+                await db.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("DeleteCourse/{id}")]
+        public async Task<IActionResult> DeleteCourse(int id)
+        {
+
+            try
+            {
+                var course = await db.Courses.FindAsync(id);
+
+                if( course == null){
+                    return NotFound(new {message = "Course not found."});
+                }
+
+                db.Courses.Remove(course);
+                await db.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+    }
+}
+
+
+---------------------
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using dotnetapp.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace dotnetapp.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class InstructorController : ControllerBase
+    {
+        public ApplicationDbContext db;
+
+        public InstructorController(ApplicationDbContext db1)
+        {
+            db = db1;
+        }
+
+        [HttpGet("GetInstructors")]
+        public async Task<ActionResult<IEnumerable<Instructor>>> GetInstructors()
+        {
+
+            try
+            {
+                var res = await db.Instructors.Include(i => i.Courses).ToListAsync();
+
+                return res;
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("PostInstructor")]
+        public async Task<ActionResult<Instructor>> PostInstructor(Instructor instructor)
+        {
+            try
+            {
+                db.Instructors.Add(instructor);
+                await db.SaveChangesAsync();
+                return CreatedAtAction(nameof(GetInstructors), new {id = instructor.InstructorId} ,instructor);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("PutInstructor/{id}")]
+        public async Task<IActionResult> PutInstructor(int id, Instructor instructor)
+        {
+            if (id != instructor.InstructorId)
+            {
+                return BadRequest(new { message = "Instructor ID mismatch." });
+            }
+
+            var existing = await db.Instructors.FindAsync(id);
+
+            if (existing == null)
+            {
+                return NotFound(new { message = "Instructor not found." });
+            }
+
+            try
+            {
+                existing.Name = instructor.Name;
+                existing.Email = instructor.Email;
+                existing.HireDate = instructor.HireDate;
+
+                await db.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("DeleteInstructor/{id}")]
+        public async Task<IActionResult> DeleteInstructor(int id)
+        {
+
+            try
+            {
+                var instructor = await db.Instructors.Include(i => i.Courses).FirstOrDefaultAsync(i=> i.InstructorId==id);
+
+                if( instructor == null){
+                    return NotFound(new {message = "Instructor not found."});
+                }
+
+                if(instructor.Courses != null && instructor.Courses.Any()){
+                    return Conflict( new {message = "Cannot delete instructor with associated courses."});
+                }
+
+                db.Instructors.Remove(instructor);
+                await db.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+    }
+}
+
+
+------------------------------
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using dotnetapp.Models;
+using Microsoft.AspNetCore.Mvc;
+
+namespace dotnetapp.Controllers
+{
+    [ApiController]
+    [Route("api/users")]
+    public class UserController : ControllerBase
+    {
+        private readonly ApplicationDbContext db;
+
+        private readonly string[] validRoles = {
+            "Admin",
+            "Organizer"
+        };
+
+        public UserController(ApplicationDbContext db1){
+            db = db1;
+        }
+
+        [HttpPost("register")]
+        public async Task<ActionResult<User>> Register(User user){
+
+            if( !IsValidRole(user.Role)){
+                return BadRequest("Ivalid role provided.");
+            }
+
+            bool usernameExists = db.Users.Any(u=> u.Username == user.Username);
+
+            if(usernameExists){
+                return Conflict("Username already exists");
+            }
+
+            db.Users.Add(user);
+            await db.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(Register), new {id = user.Id}, user);
+
+        }
+
+        [HttpPost("login")]
+        public async Task<ActionResult<object>> Login(LoginModel user){
+            var existingUser = db.Users.FirstOrDefault(u => 
+                u.Username == user.Username &&
+                u.Password == user.Password );
+
+            if(existingUser == null){
+                return BadRequest(new {
+                    message = "Login failed."
+                });
+            }
+
+            return Ok(new{
+                message = "Login successfull",
+                user = existingUser
+            });
+        }
+
+        private bool IsValidRole(string role){
+            return validRoles.Contains(role);
+        }
+    }
+}
+
+
+------------------------------
+
+Program.cs
+
+using Microsoft.EntityFrameworkCore;
+using dotnetapp.Models;
+using Microsoft.AspNetCore.Authentication;
+
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Add services to the container.
+
+builder.Services.AddControllers().AddJsonOptions(options => {options.JsonSerializerOptions.PropertyNamingPolicy = null;});
+
+//builder.Services.AddAuthentication("Basic Authentication").AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic Authentication" , null);
+builder.Services.AddAuthorization();
+
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
 app.UseHttpsRedirection();
-app.UseStaticFiles();
- 
-app.UseRouting();
- 
+
 app.UseAuthorization();
- 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Account}/{action=Register}/{id?}");
- 
+
+app.MapControllers();
+
 app.Run();
- 
- 
- {
-  "iisSettings": {
-    "windowsAuthentication": false,
-    "anonymousAuthentication": true,
-    "iisExpress": {
-      "applicationUrl": "http://localhost:20714",
-      "sslPort": 44331
+
+
+-------------------------------
+
+appsetting.json
+
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "User ID=sa;password=examlyMssql@123;Server=localhost;Database=appdb;trusted_connection=false;persist security info=false;encrypt=false"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
     }
   },
-  "profiles": {
-    "dotnetapp": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "applicationUrl": "http://0.0.0.0:8081",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
-    "IIS Express": {
-      "commandName": "IISExpress",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    }
-  }
+  "AllowedHosts": "*"
 }
- 
- 
+
+
